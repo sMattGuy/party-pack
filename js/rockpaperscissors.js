@@ -24,7 +24,7 @@ function startRPS(client,message){
 			return;
 		}
 		//check if trying to battle self
-		if(opponent == challenger){
+		if(opponentID == challengerID){
 			message.channel.send('You try to verse yourself and lost... how sad');
 			return;
 		}

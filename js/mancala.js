@@ -36,7 +36,7 @@ function mancala(client,message){
 		return (m.content.startsWith('pocket')&&(workingID == m.author.id));
 	};
 	//variables to store about player
-	let playerId = message.author.id;
+	let id = message.author.id;
 
 	//get the acceptance of battle
 	const diffFilter = m => {
@@ -195,13 +195,13 @@ function mancala(client,message){
 							//player wins
 							winner = id;
 							loser = enemyID;
-							info += `${playerName} has won! They got ${wager*2}CC!\n`;
+							info += `${playerName} has won!\n`;
 						}
 						else if(playerPocket < enemyPocket){
 							//enemy wins
 							winner = enemyID;
 							loser = id;
-							info += `${enemyName} has won! They got ${wager*2}CC!\n`;
+							info += `${enemyName} has won!\n`;
 						}
 						else{
 							//tie

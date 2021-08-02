@@ -145,7 +145,7 @@ function connect4(client,message){
 		return (m.content.startsWith('place')&&(workingID == m.author.id));
 	};
 	//variables to store about player
-	let playerId = message.author.id;
+	let id = message.author.id;
 
 	//get the acceptance of battle
 	const diffFilter = m => {
