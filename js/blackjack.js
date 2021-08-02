@@ -202,7 +202,7 @@ function blackjackStart(client,message){
 			}
 			if(dealerTotal > 21){
 				let resultsOfGame = `Bust! Dealer loses, ${challengerName}, you've won!\nYou:${playerViewer}. Dealer:${cardViewer}\n`;
-				console.log(blackjackParse.name + ' won in blackjack');
+				console.log(challengerName + ' won in blackjack');
 				
 				let playerValueBust = 0;
 				let playerAceBust = false;
