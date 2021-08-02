@@ -97,7 +97,7 @@ function startRPS(client,message){
 }
 
 function rpsHelp(client,message){
-	message.channel.send(`Use !pp rps <user> to challenge someone to rock paper scissors!\nUse 'accept' or 'deny' to respond to a battle request\nMake sure you have DM's enabled so the bot can get your throw!`);
+	message.channel.send(`Use !pp rps <user> to challenge someone to rock paper scissors!\nUse 'accept' or 'deny' to respond to a battle request\nMake sure you have DM's enabled so the bot can get your throw!\nRock beats Scissors, Scissors beats Paper, Paper beats Rock!`);
 }
 
 //helper function to get user
@@ -116,5 +116,6 @@ function getUserFromMention(client,mention) {
 
 //export functions
 module.exports = {
-	startRPS
+	startRPS,
+	rpsHelp
 };

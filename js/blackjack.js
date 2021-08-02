@@ -325,8 +325,11 @@ async function drawBoard(channel, hiddenDealer, gameMessage, playerCards, dealer
 		return channel.send(`${gameMessage}`,attachment);
 	}
 }
-
+function blackjackHelp(client, message){
+	message.channel.send(`Use !pp blackjack to start a game!\nType 'hit' to get another card\nType 'stand' to keep your current hand\nThe goal is to get your hand to 21, each cards value is its number, all face cards are 10, and an ace is either a 1 or an 11, whichever gives you the higher score. Going over 21 though is a bust, meaning you lose!`)
+}
 //export functions
 module.exports = {
-	blackjackStart
+	blackjackStart,
+	blackjackHelp
 };

@@ -42,18 +42,33 @@ client.on('message', message => {
 		console.log(message.author.username + ' is playing blackjack');
 		blackjack.blackjackStart(client,message);
 	}
+	else if(message.content === '!pp help blackjack'){
+		blackjack.blackjackHelp(client,message);
+	}
 	//rock paper scissors
 	else if(message.content.startsWith('!pp rps')){ /* !cc challenge @user amount */
 		console.log(message.author.username + ' is rpsing');
 		RPS.startRPS(client,message);
 	}
+	else if(message.content === '!pp help rps'){
+		RPS.rpsHelp(client,message);
+	}
 	else if(message.content.startsWith('!pp connect4')){
 		console.log(message.author.username + ' is playing connect4');
 		connect.connect4(client,message);
 	}
+	else if(message.content === '!pp help connect4'){
+		connect.connectHelp(client,message);
+	}
 	else if(message.content.startsWith('!pp mancala')){
 		console.log(message.author.username + ' is playing mancala');
 		mancala.mancala(client,message);
+	}
+	else if(message.content === '!pp help mancala'){
+		mancala.mancalaHelp(client,message);
+	}
+	else if(message.content === '!pp help'){
+		message.channel.send(`Use !pp help blackjack to see blackjack information\nUse !pp help rps to see rock paper scissors information\nUse !pp help connect4 to see connect4 information\nUse !pp help mancala to see mancala information`);
 	}
 });
 // Log our bot in using the token from https://discord.com/developers/applications

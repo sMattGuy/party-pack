@@ -296,7 +296,7 @@ function connect4(client,message){
 }
 
 function connectHelp(client,message){
-	message.channel.send(`Use !pp connect4 <user> to challenge someone to connect 4\nUse 'accept' or 'deny' to respond to the challenge\nUse 'place <index>' to place your piece`);
+	message.channel.send(`Use !pp connect4 <user> to challenge someone to connect 4\nUse 'accept' or 'deny' to respond to the challenge\nUse 'place <index>' to place your piece\nThe goal of connect 4 is to line up 4 of your pieces either horizontally, vertically, or diagonally!`);
 }
 
 function getUserFromMention(client,mention) {
