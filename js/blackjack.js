@@ -11,7 +11,7 @@ function blackjackStart(client,message){
 	let challengerName = message.author.username;
 	let challengerImage = message.author.displayAvatarURL({format:'png'});
 	let cardValue = [11,2,3,4,5,6,7,8,9,10,10,10,10];
-	console.log(data.users[i].name + ' has started blackjack');	
+	console.log(challengerName + ' has started blackjack');	
 	let usedCards = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
 	//dealer
 	let dealerCard1 = (Math.floor(Math.random() * 52));
@@ -66,20 +66,26 @@ function blackjackStart(client,message){
 			return ((m.content === 'hit' || m.content === 'stand') && (challengerID == m.author.id));
 		};
 		let resultsOfGame = `${challengerName}, Type 'hit' or 'stand', you have 1 min to respond.\nYou:${blackjackCards[playerCard1]},${blackjackCards[playerCard2]}. Dealer:${blackjackCards[dealerCard1]},??.`;
-		drawBoard(message.channel, true, resultsOfGame, playerCards, dealerCards,false,false,playersValue,message.author.username,cardValue[dealerCards[0]%13],challengerImage).catch(error => {console.log(error); message.channel.send(resultsOfGame);}).then(msg => {
-		message.channel.awaitMessages(diffFilter,{max:1,time:60000,errors:['time']}).then(choice => {
+		drawBoard(message.channel, true, resultsOfGame, playerCards, dealerCards,false,false,playersValue,message.author.username,cardValue[dealerCards[0]%13],challengerImage).then(msg => {
+		message.channel.awaitMessages(filter,{max:1,time:60000,errors:['time']}).then(choice => {
 			let option = choice.first().content;
+			choice.first().delete();
 			if(option == 'hit'){
-				blackJackHit();
+				msg.delete().catch(() => {console.log('couldnt delete message')});
+				blackjackHit();
 			}
 			else if(option == 'stand'){
+				msg.delete().catch(() => {console.log('couldnt delete message')});
 				blackjackStand();
 			}
 			}).catch(e => {
 				message.channel.send(`${challengerName} didn't respond in time!`);
 				console.log(e);
 			});
-		}
+		}).catch(error => {
+			console.log(error);
+			message.channel.send(`An error has occurred, ending game.`);
+		});
 		
 		
 		async function blackjackHit(){
@@ -103,7 +109,7 @@ function blackjackStart(client,message){
 			}
 			let cardViewer = "";
 			for(let i=0;i<playerCards.length;i++){
-				cardViewer += playerCards[i]];
+				cardViewer += blackjackCards[playerCards[i]];
 			}
 			if(currentTotal > 21){
 				let resultsOfGame = `Bust! You drew a ${blackjackCards[newCard]}, ${challengerName}, you lose!\nYou:${cardViewer}\n`;
@@ -112,37 +118,46 @@ function blackjackStart(client,message){
 			}
 			else if(ace && currentTotal + 10 <= 21){
 				let resultsOfGame = `${challengerName}, you drew a ${blackjackCards[newCard]} you now have ${currentTotal} (or ${currentTotal + 10} since you have an ace)\nYou:${cardViewer}`;
-				drawBoard(message.channel, true, resultsOfGame, playerCards, dealerCards,false,false,`${currentTotal} (or ${currentTotal + 10})`,challengerName,dealerValue[dealerCards[0]%13],challengerImage).catch(error => {console.log(error); message.channel.send(resultsOfGame);}).then(msg => {
-				message.channel.awaitMessages(diffFilter,{max:1,time:60000,errors:['time']}).then(choice => {
+				drawBoard(message.channel, true, resultsOfGame, playerCards, dealerCards,false,false,`${currentTotal} (or ${currentTotal + 10})`,challengerName,dealerValue[dealerCards[0]%13],challengerImage).then(msg => {
+				message.channel.awaitMessages(filter,{max:1,time:60000,errors:['time']}).then(choice => {
 					let option = choice.first().content;
+					choice.first().delete();
 					if(option == 'hit'){
-						blackJackHit();
+						msg.delete().catch(() => {console.log('couldnt delete message')});
+						blackjackHit();
 					}
 					else if(option == 'stand'){
+						msg.delete().catch(() => {console.log('couldnt delete message')});
 						blackjackStand();
 					}
 					}).catch(e => {
 						message.channel.send(`${challengerName} didn't respond in time!`);
 						console.log(e);
 					});
-				};
+				}).catch(error => {console.log(error); message.channel.send(resultsOfGame);});
 			}
 			else{
 				let resultsOfGame = `${challengerName}, you drew a ${blackjackCards[newCard]} you now have ${currentTotal}\nYou:${cardViewer}`;
-				drawBoard(message.channel, true, resultsOfGame, playerCards, dealerCards,false,false,currentTotal,challengerName,dealerValue[dealerCards[0]%13],challengerImage).catch(error => {console.log(error); message.channel.send(resultsOfGame);}).then(msg => {
-				message.channel.awaitMessages(diffFilter,{max:1,time:60000,errors:['time']}).then(choice => {
+				drawBoard(message.channel, true, resultsOfGame, playerCards, dealerCards,false,false,currentTotal,challengerName,dealerValue[dealerCards[0]%13],challengerImage).then(msg => {
+				message.channel.awaitMessages(filter,{max:1,time:60000,errors:['time']}).then(choice => {
 					let option = choice.first().content;
+					choice.first().delete();
 					if(option == 'hit'){
-						blackJackHit();
+						msg.delete().catch(() => {console.log('couldnt delete message')});
+						blackjackHit();
 					}
 					else if(option == 'stand'){
+						msg.delete().catch(() => {console.log('couldnt delete message')});
 						blackjackStand();
 					}
 					}).catch(e => {
 						message.channel.send(`${challengerName} didn't respond in time!`);
 						console.log(e);
 					});
-				};
+				}).catch(error => {
+					console.log(error);
+					message.channel.send(`An error has occured, the game is ending.`);
+				});
 			}
 		}
 
@@ -220,19 +235,28 @@ function blackjackStart(client,message){
 					//player wins
 					let resultsOfGame = `${challengerName}, you have ${playerValue}, Dealer has ${dealerTotal}. You've won!\nYou:${playerViewer}. Dealer:${cardViewer}\n`;
 					console.log(challengerName + ' won in blackjack');
-					drawBoard(message.channel, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage).catch(error => {console.log(error); message.channel.send(resultsOfGame);});
+					drawBoard(message.channel, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage).catch(error => {
+						console.log(error);
+						message.channel.send(resultsOfGame);
+					});
 				}
 				else if(dealerTotal > playerValue){
 					//player lose
 					let resultsOfGame = `${challengerName}, you have ${playerValue}, Dealer has ${dealerTotal}. You've lost!\nYou:${playerViewer}. Dealer:${cardViewer}\n`;
 					console.log(challengerName + ' lost in blackjack');
-					drawBoard(message.channel, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage).catch(error => {console.log(error); message.channel.send(resultsOfGame);});
+					drawBoard(message.channel, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage).catch(error => {
+						console.log(error);
+						message.channel.send(resultsOfGame);
+					});
 				}
 				else{
 					//draw
 					let resultsOfGame = `${challengerName}, you have ${playerValue}, Dealer has ${dealerTotal}. It's a draw!\nYou:${playerViewer}. Dealer:${cardViewer}`;
 					console.log(challengerName + ' drew in blackjack');
-					drawBoard(message.channel, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage).catch(error => {console.log(error); message.channel.send(resultsOfGame);});
+					drawBoard(message.channel, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage).catch(error => {
+						console.log(error);
+						message.channel.send(resultsOfGame);
+					});
 				}
 			}
 		}
@@ -295,10 +319,10 @@ async function drawBoard(channel, hiddenDealer, gameMessage, playerCards, dealer
 	
 	const attachment = new Discord.MessageAttachment(canvas.toBuffer(), 'board.png');
 	if(!ender){
-		channel.send(`${gameMessage}`,attachment).then(msg => msg.delete({timeout:60000})).catch(error => {console.log(error)});
+		return channel.send(`${gameMessage}`,attachment);
 	}
 	else{
-		channel.send(`${gameMessage}`,attachment);
+		return channel.send(`${gameMessage}`,attachment);
 	}
 }
 
