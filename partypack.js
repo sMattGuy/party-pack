@@ -7,6 +7,7 @@ const blackjack = require('./js/blackjack.js');
 const RPS = require('./js/rockpaperscissors.js');
 const connect = require('./js/connect.js');
 const mancala = require('./js/mancala.js');
+const battle = require('./js/battle.js');
 // Create an instance of a Discord client
 const client = new Discord.Client();
 // import token and database
@@ -38,7 +39,7 @@ client.on('message', message => {
       }
    });
 	//blackjack
-	if(message.content.startsWith('!pp blackjack')){ /* !cc blackjack amount */	
+	if(message.content.startsWith('!pp blackjack')){
 		console.log(message.author.username + ' is playing blackjack');
 		blackjack.blackjackStart(client,message);
 	}
@@ -46,7 +47,7 @@ client.on('message', message => {
 		blackjack.blackjackHelp(client,message);
 	}
 	//rock paper scissors
-	else if(message.content.startsWith('!pp rps')){ /* !cc challenge @user amount */
+	else if(message.content.startsWith('!pp rps')){
 		console.log(message.author.username + ' is rpsing');
 		RPS.startRPS(client,message);
 	}
@@ -66,6 +67,13 @@ client.on('message', message => {
 	}
 	else if(message.content === '!pp help mancala'){
 		mancala.mancalaHelp(client,message);
+	}
+	else if(message.content.startsWith('!pp battle')){
+		console.log(message.author.username + ' is battling');
+		battle.battle(client,message);
+	}
+	else if(message.content === '!pp help battle'){
+		battle.battleHelp(client,message);
 	}
 	else if(message.content === '!pp help'){
 		message.channel.send(`Use !pp help blackjack to see blackjack information\nUse !pp help rps to see rock paper scissors information\nUse !pp help connect4 to see connect4 information\nUse !pp help mancala to see mancala information`);
