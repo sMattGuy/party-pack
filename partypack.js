@@ -76,7 +76,7 @@ client.on('message', message => {
 		battle.battleHelp(client,message);
 	}
 	else if(message.content === '!pp help'){
-		message.channel.send(`Use !pp help blackjack to see blackjack information\nUse !pp help rps to see rock paper scissors information\nUse !pp help connect4 to see connect4 information\nUse !pp help mancala to see mancala information`);
+		message.channel.send(`Use !pp help blackjack to see blackjack information\nUse !pp help rps to see rock paper scissors information\nUse !pp help connect4 to see connect4 information\nUse !pp help mancala to see mancala information\nUse !pp help battle to see battle information`);
 	}
 });
 // Log our bot in using the token from https://discord.com/developers/applications
