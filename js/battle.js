@@ -206,7 +206,7 @@ function battle(client,message){
 		});
 	}
 	
-	async function player2Menu(){
+	async function player2Menu(lastGlobalMessage){
 		//same as player 1 but this time it ends with the turn taking place
 		let p2menu = menu + `\nYour HP -> ${player2HP}`;
 		player2.send(p2menu,{code:true}).then(p2MenuMsg =>{
