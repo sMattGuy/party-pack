@@ -143,12 +143,16 @@ function battle(client,message){
 							player1Menu(globMsg);
 						});
 					}).catch(() => {
+						player1.send(`Player 2 didn't type their response correctly or time expired to respond`);
+						player2.send(`You didn't respond in time`);
 						message.channel.send(`Player 2 didn't type their response correctly or time expired to respond`);
 					});
 				}).catch(() => {
 					message.channel.send(`Failed to send DM to player 2 (make sure you have DM's on for this server!)`);
 				});
 			}).catch(() => {
+				player2.send(`Player 1 didn't type their response correctly or time expired to respond`);
+				player1.send(`You didn't respond in time`);
 				message.channel.send(`Player 1 didn't type their response correctly or time expired to respond`);
 			});
 		}).catch(() => {
@@ -160,7 +164,7 @@ function battle(client,message){
 		//begin battle
 		let p1menu = menu + `\nYour HP -> ${player1HP}`;
 		player1.send(p1menu,{code:true}).then(p1MenuMsg =>{
-			player1.dmChannel.awaitMessages(menuFilter, {max:1,time:20000,errors:['time']}).then(p1Choice => {
+			player1.dmChannel.awaitMessages(menuFilter, {max:1,time:60000,errors:['time']}).then(p1Choice => {
 				//use player 1 menu response to determine next action
 				player1Choice = p1Choice.first().content;
 				p1MenuMsg.delete();
@@ -168,12 +172,14 @@ function battle(client,message){
 				if(player1Choice === 'description'){
 					player1.send(characterDescription(player1Class),{code:true}).then(p1DescMsg =>{
 						player1.send(menuNoDesc,{code:true}).then(p1MenuMsgNoDesc => {
-							player1.dmChannel.awaitMessages(menuFilterNoDesc, {max:1,time:20000,errors:['time']}).then(p1ChoiceNoDes => {
+							player1.dmChannel.awaitMessages(menuFilterNoDesc, {max:1,time:60000,errors:['time']}).then(p1ChoiceNoDes => {
 								player1Choice = p1ChoiceNoDes.first().content;
 								p1DescMsg.delete();
 								player1.send(`Getting player 2 action for this turn...`);
 								player2Menu(lastGlobalMessage);
 							}).catch(e => {
+								player1.send(`You didn't respond in time`);
+								player2.send(`Player 1 didn't respond in time`);
 								message.channel.send(`Player 1 didn't type their response correctly or time expired to respond`);
 								return;
 							});
@@ -191,6 +197,8 @@ function battle(client,message){
 					player2Menu(lastGlobalMessage);
 				}
 			}).catch(challChoice => {
+				player1.send(`You didn't respond in time`);
+				player2.send(`Player 1 didn't respond in time`);
 				message.channel.send(`Player 1 didn't type their response correctly or time expired to respond`);
 			});
 		}).catch(() => {
@@ -202,7 +210,7 @@ function battle(client,message){
 		//same as player 1 but this time it ends with the turn taking place
 		let p2menu = menu + `\nYour HP -> ${player2HP}`;
 		player2.send(p2menu,{code:true}).then(p2MenuMsg =>{
-			player2.dmChannel.awaitMessages(menuFilter, {max:1,time:20000,errors:['time']}).then(p2Choice => {
+			player2.dmChannel.awaitMessages(menuFilter, {max:1,time:60000,errors:['time']}).then(p2Choice => {
 				//use player 2 menu response to determine next action
 				player2Choice = p2Choice.first().content;
 				p2MenuMsg.delete();
@@ -210,12 +218,14 @@ function battle(client,message){
 				if(player2Choice === 'description'){
 					player2.send(characterDescription(player2Class),{code:true}).then(p2DescMsg =>{
 						player2.send(menuNoDesc,{code:true}).then(p2MenuMsgNoDesc => {
-							player2.dmChannel.awaitMessages(menuFilterNoDesc, {max:1,time:20000,errors:['time']}).then(p2ChoiceNoDes => {
+							player2.dmChannel.awaitMessages(menuFilterNoDesc, {max:1,time:60000,errors:['time']}).then(p2ChoiceNoDes => {
 								player2Choice = p2ChoiceNoDes.first().content;
 								p2DescMsg.delete();
 								player2.send(`The turn will now take place...`);
 								doTurn(lastGlobalMessage);
 							}).catch(e => {
+								player1.send(`Player 2 didn't respond in time`);
+								player2.send(`You didn't respond in time`);
 								message.channel.send(`Player 2 didn't type their response correctly or time expired to respond`);
 								return;
 							});
@@ -233,6 +243,8 @@ function battle(client,message){
 					doTurn(lastGlobalMessage);
 				}
 			}).catch(challChoice => {
+				player1.send(`Player 2 didn't respond in time`);
+				player2.send(`You didn't respond in time`);
 				message.channel.send(`Player 2 didn't type their response correctly or time expired to respond`);
 			});
 		}).catch(() => {
