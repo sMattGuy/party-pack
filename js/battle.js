@@ -520,7 +520,7 @@ function characterDescription(character){
 }
 
 function battleHelp(client,message){
-	message.channel.send(`TBA`);
+	message.channel.send(`Use !pp battle <user>  to challenge someone to a battle! All the battle commands are given to you as you play. The battle uses DM's so make sure you have them enabled!`);
 }
 
 function getUserFromMention(client,mention) {
