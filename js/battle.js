@@ -275,12 +275,12 @@ function battle(client,message){
 			info += `${enemyName} prepares their defenses, raising their DV by ${dvBonus} and AV by ${avBonus}!\n`;
 		}
 		if(player1Choice == 'heal'){
-			let healAmount = Math.floor(Math.random() * Math.floor(player1Class.attributes.intelligence / 3)) + 1;
+			let healAmount = Math.floor(Math.random() * Math.floor(player1Class.attributes.intelligence / 2)) + 7;
 			player1HP += healAmount;
 			info += `${playerName} bandages their wounds healing ${healAmount} HP!\n`;
 		}
 		if(player2Choice == 'heal'){
-			let healAmount = Math.floor(Math.random() * Math.floor(player2Class.attributes.intelligence / 3)) + 1;
+			let healAmount = Math.floor(Math.random() * Math.floor(player2Class.attributes.intelligence / 2)) + 7;
 			player2HP += healAmount;
 			info += `${enemyName} bandages their wounds healing ${healAmount} HP!\n`;
 		}
