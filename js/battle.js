@@ -388,6 +388,7 @@ function battle(client,message){
 					
 					info += `${enemyName} uses '${player2Class.skill.name}' on ${playerName}!\n`;
 					if(player1HP <= 0){
+						lastGlobalMessage.delete();
 						info += `${playerName} topples over and dies! ${enemyName} has won!\n`;
 						player1.send(info,{code:true});
 						player2.send(info,{code:true});
@@ -467,6 +468,7 @@ function battle(client,message){
 				info += `${enemyName} strikes ${playerName} with their ${player2Class.weapon.name} for ${player2Damage} damage!\n`;
 				if(player1HP <= 0){
 					info += `${playerName} topples over and dies! ${enemyName} has won!\n`;
+					lastGlobalMessage.delete();
 					player1.send(info,{code:true});
 					player2.send(info,{code:true});
 					message.channel.send(info,{code:true});
