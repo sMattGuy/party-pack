@@ -1,83 +1,95 @@
 'use strict';
 // Import the discord.js module and others
-const Discord = require('discord.js');
+const { Client, Intents, Collection } = require('discord.js');
 const fs = require('fs');
-//additional files holding each feature
-const blackjack = require('./js/blackjack.js');
-const RPS = require('./js/rockpaperscissors.js');
-const connect = require('./js/connect.js');
-const mancala = require('./js/mancala.js');
-const battle = require('./js/battle.js');
+
 // Create an instance of a Discord client
-const client = new Discord.Client();
+const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES] });
+
 // import token and database
 const credentials = require('./auth.json');
 
+client.commands = new Collection();
+const commandFolders = fs.readdirSync('./js');
+
+for(const folder of commandFolders){
+	const commandFiles = fs.readdirSync(`./js/${folder}`).filter(file => file.endsWith(`.js`));
+	for(const file of commandFiles){
+		const command = require(`./js/${folder}/${file}`);
+		client.commands.set(command.name,command);
+	}
+}
+
 //sets ready presense
 client.on('ready', () => {
-  client.user.setPresence({
-    status: 'online',
-    activity: {
-        name: 'for !pp help',
-        type: "WATCHING"
-    }
-  });
-  //list server
-  client.guilds.cache.forEach(guild => {
-    console.log(`${guild.name} | ${guild.id}`);
-  });
-  console.log('I am ready!');
+	client.user.setPresence({
+		status: 'online',
+	});
+	//list server
+	client.guilds.cache.forEach(guild => {
+		console.log(`${guild.name} | ${guild.id}`);
+	});
+	console.log('I am ready!');
 });
-// Create an event listener for messages
-client.on('message', message => {
-	//set presence
-   client.user.setPresence({
-      status: 'online',
-		activity: {
-         name: 'for !pp help',
-         type: "WATCHING"
-      }
-   });
-	//blackjack
-	if(message.content.startsWith('!pp blackjack')){
-		console.log(message.author.username + ' is playing blackjack');
-		blackjack.blackjackStart(client,message);
-	}
-	else if(message.content === '!pp help blackjack'){
-		blackjack.blackjackHelp(client,message);
-	}
-	//rock paper scissors
-	else if(message.content.startsWith('!pp rps')){
-		console.log(message.author.username + ' is rpsing');
-		RPS.startRPS(client,message);
-	}
-	else if(message.content === '!pp help rps'){
-		RPS.rpsHelp(client,message);
-	}
-	else if(message.content.startsWith('!pp connect4')){
-		console.log(message.author.username + ' is playing connect4');
-		connect.connect4(client,message);
-	}
-	else if(message.content === '!pp help connect4'){
-		connect.connectHelp(client,message);
-	}
-	else if(message.content.startsWith('!pp mancala')){
-		console.log(message.author.username + ' is playing mancala');
-		mancala.mancala(client,message);
-	}
-	else if(message.content === '!pp help mancala'){
-		mancala.mancalaHelp(client,message);
-	}
-	else if(message.content.startsWith('!pp battle')){
-		console.log(message.author.username + ' is battling');
-		battle.battle(client,message);
-	}
-	else if(message.content === '!pp help battle'){
-		battle.battleHelp(client,message);
-	}
-	else if(message.content === '!pp help'){
-		message.channel.send(`Use !pp help blackjack to see blackjack information\nUse !pp help rps to see rock paper scissors information\nUse !pp help connect4 to see connect4 information\nUse !pp help mancala to see mancala information\nUse !pp help battle to see battle information`);
+
+client.on('messageCreate', async message => {
+	if (message.content.toLowerCase() === '!partypack deploy' && message.author.id == '492850107038040095') {
+		await client.guilds.cache.get(message.guildId).commands.set([]);
+		console.log('deploying commands');
+		const data = [
+		{
+			name: 'blackjack',
+			description: 'Lets you play a game of Blackjack!',
+		},
+		{
+			name: 'battle',
+			description: 'Starts a battle with another player!',
+			options: [{
+				name: 'user',
+				type: 'USER',
+				description: 'The users ID or mention',
+				required: true,
+			}],
+		},
+		{
+			name: 'connect4',
+			description: 'Starts a connect 4 game with someone!',
+			options: [{
+				name: 'user',
+				type: 'USER',
+				description: 'The users ID or mention',
+				required: true,
+			}],
+		},
+		{
+			name: 'rps',
+			description: 'Starts a Rock Paper Scissors game with someone!',
+			options: [{
+				name: 'user',
+				type: 'USER',
+				description: 'The users ID or mention',
+				required: true,
+			}],
+		},
+		];
+
+		const command = await client.guilds.cache.get(message.guildId).commands.set(data);
+		console.log(command);
 	}
 });
+
+client.on('interactionCreate', async interaction => {
+	if (!interaction.isCommand()) return;
+
+	if (!client.commands.has(interaction.commandName)) return;
+
+	try {
+		await client.commands.get(interaction.commandName).execute(interaction);
+	} catch (error) {
+		console.error(error);
+		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+	}
+});
+
 // Log our bot in using the token from https://discord.com/developers/applications
 client.login(`${credentials.token}`);
