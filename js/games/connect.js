@@ -242,7 +242,6 @@ module.exports = {
 									else{
 										info += `${enemyName} has won!\n`;
 									}
-									await lastReply.delete();
 									drawConnect(frameInteraction,`${info}`,boardArray,true).then(()=>{
 										return;
 									});
