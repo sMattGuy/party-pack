@@ -156,10 +156,13 @@ module.exports = {
 		//check if trying to battle self temp disabled for testing
 
 		if(playerID == enemyID){
-			message.channel.send('You cannot play with yourself..... weirdo');
+			interaction.editReply('You cannot play with yourself..... weirdo');
 			return;
 		}
-
+		if(enemy.bot){
+			interaction.editReply('You cannot play with yourself..... weirdo');
+			return;
+		}
 		//variables to store about player
 		let id = interaction.user.id;
 		
@@ -245,11 +248,11 @@ module.exports = {
 							});
 						})
 					}).catch(() => {
-						message.channel.send(`Failed to send DM to player 2 (make sure you have DM's on for this server!)`);
+						interaction.editReply(`Failed to send DM to player 2 (make sure you have DM's on for this server!)`);
 					});
 				})
 			}).catch(() => {
-				message.channel.send(`Failed to send DM to player 1 (make sure you have DM's on for this server!)`);
+				interaction.editReply(`Failed to send DM to player 1 (make sure you have DM's on for this server!)`);
 			});
 		}
 		
@@ -271,11 +274,11 @@ module.exports = {
 									player2Menu();
 								})
 							}).catch(e => {
-								message.channel.send(`Failed to send message to player 1 (make sure you have DM's on for this server!)`);
+								interaction.editReply(`Failed to send message to player 1 (make sure you have DM's on for this server!)`);
 								return;
 							});
 						}).catch(e => {
-							message.channel.send(`Failed to send message to player 1 (make sure you have DM's on for this server!)`);
+							interaction.editReply(`Failed to send message to player 1 (make sure you have DM's on for this server!)`);
 							return;
 						});;
 					}
@@ -285,7 +288,7 @@ module.exports = {
 					}
 				})
 			}).catch(() => {
-				message.channel.send(`Failed to send DM to Player 1 (make sure you have DM's on for this server!)`);
+				interaction.editReply(`Failed to send DM to Player 1 (make sure you have DM's on for this server!)`);
 			});
 		}
 		
@@ -307,11 +310,11 @@ module.exports = {
 									doTurn();
 								})
 							}).catch(e => {
-								message.channel.send(`Failed to send message to player 2 (make sure you have DM's on for this server!)`);
+								interaction.editReply(`Failed to send message to player 2 (make sure you have DM's on for this server!)`);
 								return;
 							});
 						}).catch(e => {
-							message.channel.send(`Failed to send message to player 2 (make sure you have DM's on for this server!)`);
+							interaction.editReply(`Failed to send message to player 2 (make sure you have DM's on for this server!)`);
 							return;
 						});;
 					}
@@ -320,7 +323,7 @@ module.exports = {
 					}
 				})
 			}).catch(() => {
-				message.channel.send(`Failed to send DM to Player 2 (make sure you have DM's on for this server!)`);
+				interaction.editReply(`Failed to send DM to Player 2 (make sure you have DM's on for this server!)`);
 			});
 		}
 		
@@ -497,7 +500,7 @@ module.exports = {
 							info = Formatters.codeBlock(info);
 							player1.send(info);
 							player2.send(info);
-							message.channel.send(info);
+							interaction.editReply(info);
 							return;
 						}
 					}
