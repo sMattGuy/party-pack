@@ -154,7 +154,7 @@ module.exports = {
 				.setStyle('DANGER'),
 		);
 		const accCollector = await interaction.channel.createMessageComponentCollector({filter:startFilter, time: 60000});
-		await interaction.editReply({content:`${enemyName}! Click 'Accept' to accept the battle, or 'Deny' to reject the battle, You have 1 min to respond!`,components:[accRow]}).then(res => {
+		await interaction.editReply({content:`@${optionOpp.tag}! Click 'Accept' to accept the battle, or 'Deny' to reject the battle, You have 1 min to respond!`,components:[accRow]}).then(res => {
 			let noGame = true;
 			accCollector.once('collect',async buttInteraction => {
 				noGame = false;

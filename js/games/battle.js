@@ -203,7 +203,7 @@ module.exports = {
 		const player1Collector = await player1DM.createMessageComponentCollector();
 		const player2Collector = await player2DM.createMessageComponentCollector();
 		
-		await interaction.editReply({content:`${enemyName}! Type 'accept' to accept the battle, or 'deny' to reject the battle, You have 1 min to respond!`,components:[accRow]}).then(msg => {
+		await interaction.editReply({content:`@${enemy.tag}! Type 'accept' to accept the battle, or 'deny' to reject the battle, You have 1 min to respond!`,components:[accRow]}).then(msg => {
 			accCollector.once('collect',async buttInteraction => {
 				noGame = false;
 				if(buttInteraction.customId == 'accept'){
