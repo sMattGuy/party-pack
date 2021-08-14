@@ -331,7 +331,7 @@ async function drawConnect(interaction,info,boardArray,end){
 	);
 	const attachment = new MessageAttachment(canvas.toBuffer(), 'connect4image.png');
 	if(end){
-		return await interaction.followUp({content:info,files:[attachment]});
+		return await interaction.editReply({content:info,files:[attachment]});
 	}
-	return await interaction.followUp({content:info,files:[attachment],components:[row1,row2]});
+	return await interaction.editReply({content:info,files:[attachment],components:[row1,row2]});
 }
