@@ -155,14 +155,22 @@ module.exports = {
 		);
 		const accCollector = await interaction.channel.createMessageComponentCollector({filter:startFilter, time: 60000});
 		await interaction.editReply({content:`${enemyName}! Click 'Accept' to accept the battle, or 'Deny' to reject the battle, You have 1 min to respond!`,components:[accRow]}).then(res => {
+			let noGame = true;
 			accCollector.once('collect',async buttInteraction => {
+				noGame = false;
 				if(buttInteraction.customId == 'accept'){
+					await buttInteraction.update({components:[]});
 					let info = `It is ${playerName}'s turn!\n`;
 					frame(info,interaction);
 				}
 				else if(buttInteraction.customId == 'deny'){
 					await buttInteraction.update({content:`You have declined the game!`,components:[]});
 					return;
+				}
+			});
+			accCollector.once('end',async collected => {
+				if(noGame){
+					await interaction.deleteReply().catch(e => console.log('no interaction exists'));
 				}
 			});
 		});
@@ -191,7 +199,7 @@ module.exports = {
 							currentName = enemyName;
 						}
 						await bi.update({components:[]});
-						frame(`That column is full ${currentName}! select a different one!\n`,bi);
+						frame(`That column is full ${currentName}! select a different one!\n`,frameInteraction);
 					}
 					//actually place piece
 					else{
@@ -244,12 +252,12 @@ module.exports = {
 									if(workingID == id){
 										workingID = enemyID;
 										await bi.update({components:[]});
-										frame(`It's (blue) ${enemyName}'s turn! ${playerName} placed their chip in ${number}!\n`,bi);
+										frame(`It's (blue) ${enemyName}'s turn! ${playerName} placed their chip in ${number}!\n`,frameInteraction);
 									}
 									else{
 										workingID = id;
 										await bi.update({components:[]});
-										frame(`It's (red) ${playerName}'s turn! ${enemyName} placed their chip in ${number}!\n`,bi);
+										frame(`It's (red) ${playerName}'s turn! ${enemyName} placed their chip in ${number}!\n`,frameInteraction);
 									}
 								}
 								break;
@@ -264,7 +272,7 @@ module.exports = {
 }
 
 async function drawConnect(interaction,info,boardArray,end){
-	await interaction.deleteReply().catch(e => console.log('interaction doesnt exist'));
+	await interaction.editReply({attachments:[]});
 	const canvas = Canvas.createCanvas(288,252);
 	const ctx = canvas.getContext('2d');
 	const background = await Canvas.loadImage('./connect/connectBoard.png');

@@ -1,4 +1,4 @@
-const { MessageEmbed, MessageActionRow, MessageButton, MessageAttachment, MessageSelectMenu } = require('discord.js');
+const { MessageEmbed, MessageActionRow, MessageButton, MessageAttachment, MessageSelectMenu, Formatters } = require('discord.js');
 const fs = require('fs');
 
 //player class definitions
@@ -152,36 +152,16 @@ module.exports = {
 		let enemy = interaction.options.getUser('user'); 
 		let enemyID = enemy.id;
 		let enemyName = enemy.username;
-
+		await interaction.reply(`Starting battle...`);
 		//check if trying to battle self temp disabled for testing
+
 		if(playerID == enemyID){
 			message.channel.send('You cannot play with yourself..... weirdo');
 			return;
 		}
+
 		//variables to store about player
-		let id = message.author.id;
-		
-		//filters for decisions
-		//get the acceptance of battle
-		
-		const menuFilter = m => {
-			if(!menuOptions.has(m.content) && !m.author.bot){
-				m.channel.send('Invalid choice, make sure its one of the menu options!');
-			}
-			return (menuOptions.has(m.content) && !m.author.bot);
-		}
-		const menuFilterNoDesc = m => {
-			if((!menuOptions.has(m.content) || m.content === 'description') && !m.author.bot){
-				m.channel.send('Invalid choice, make sure its one of the menu options!');
-			}
-			return ((menuOptions.has(m.content) && m.content !== 'description') && !m.author.bot);
-		}
-		const classFilter = m => {
-			if(!classNames.has(m.content) && !m.author.bot){
-				m.channel.send('Invalid choice, make sure you spell it exactly as it was sent before!');
-			}
-			return (classNames.has(m.content) && !m.author.bot);
-		}
+		let id = interaction.user.id;
 		
 		//get the acceptance of battle
 		const startFilter = i => i.user.id === enemyID && (i.customId === 'accept' || i.customId === 'deny');
@@ -198,8 +178,8 @@ module.exports = {
 		);
 		const accCollector = await interaction.channel.createMessageComponentCollector({filter:startFilter, time: 60000});
 		
-		let player1 = client.users.cache.get(id);
-		let player2 = client.users.cache.get(enemyID);
+		let player1 = player;
+		let player2 = enemy;
 		
 		let player1Class = '';
 		let player2Class = '';
@@ -220,15 +200,15 @@ module.exports = {
 		const player1Collector = await player1DM.createMessageComponentCollector();
 		const player2Collector = await player2DM.createMessageComponentCollector();
 		
-		interaction.editReply({content:`${enemyName}! Type 'accept' to accept the battle, or 'deny' to reject the battle, You have 1 min to respond!`,components:[accRow]}).then(msg => {
+		await interaction.editReply({content:`${enemyName}! Type 'accept' to accept the battle, or 'deny' to reject the battle, You have 1 min to respond!`,components:[accRow]}).then(msg => {
 			accCollector.once('collect',async buttInteraction => {
 				noGame = false;
 				if(buttInteraction.customId == 'accept'){
-					interaction.editReply({content:`Fighters, your battle will be in DM's!`,components:[]});
+					await interaction.editReply({content:`Fighters, your battle will be in DM's!`,components:[]});
 					classSelection();
 				}
 				else if(buttInteraction.customId == 'deny'){
-					interaction.editReply({content:`You have declined the game!`,components:[]});
+					await interaction.editReply({content:`You have declined the game!`,components:[]});
 					return;
 				}
 			});
@@ -245,23 +225,23 @@ module.exports = {
 				//await class selection
 				player1Collector.once('collect', async player1ClassInt => {
 					//assign class to player 1
-					classInteract.update({components:[]});
-					player1Class = JSON.parse(JSON.stringify(classNames.get(player1ClassInt.customId)));
+					player1Class = JSON.parse(JSON.stringify(classNames.get(player1ClassInt.values[0])));
+					await player1ClassInt.update({components:[]});
 					player1HP += player1Class.attributes.toughness;
 					player1.send(characterDescription(player1Class),{code:true});
 					player1.send(`Getting opponents class, the game will start soon!`);
 					player2.send({content:`Please select a class`,code:true,components:[classSelect]}).then(() => {
 						player2Collector.once('collect',async player2ClassInt => {
-							player2Class.update({components:[]});
 							//assign player2 class
-							player2Class = JSON.parse(JSON.stringify(classNames.get(player2ClassInt.customId)));
+							player2Class = JSON.parse(JSON.stringify(classNames.get(await player2ClassInt.values[0])));
+							await player2ClassInt.update({components:[]});
 							player2HP += player2Class.attributes.toughness;
 							player2.send(characterDescription(player2Class),{code:true});
 							//message all players that the battle has begun
 							player1.send(`Get ready, the game will now start with you!`);
 							player2.send(`Get ready, the game will now start with player 1!`);
-							await interaction.editReply(`${playerName} the ${player1Class.name} vs ${enemyName} the ${player2Class.name}`,{code:true}).then(globMsg => {
-								player1Menu(globMsg);
+							await interaction.editReply(Formatters.codeBlock(`${playerName} the ${player1Class.name} vs ${enemyName} the ${player2Class.name}`)).then(() => {
+								player1Menu();
 							});
 						})
 					}).catch(() => {
@@ -273,22 +253,22 @@ module.exports = {
 			});
 		}
 		
-		async function player1Menu(lastGlobalMessage){
+		async function player1Menu(){
 			//begin battle
-			let p1menu = `Your HP -> ${player1HP}\nSelect an Action`;
-			player1.send({content:p1menu,code:true,components:[menuSelect]}).then(p1MenuMsg =>{
+			let p1menu = Formatters.codeBlock(`Your HP -> ${player1HP}\nSelect an Action`);
+			player1.send({content:p1menu,components:[menuSelect]}).then(p1MenuMsg =>{
 				player1Collector.once('collect', player1ChoiceInt => {
 					//use player 1 menu response to determine next action
-					player1Choice = player1ChoiceInt.customId;
-					p1MenuMsg.update({components:[]});
+					player1Choice = player1ChoiceInt.values[0];
+					player1ChoiceInt.update({components:[]});
 					//special handle for description
 					if(player1Choice === 'description'){
-						player1.send(characterDescription(player1Class),{code:true}).then(p1DescMsg =>{
-							player1.send({content:`Please select an action`,code:true, components:[menuSelectNoDes]}).then(p1MenuMsgNoDesc => {
+						player1.send(characterDescription(player1Class)).then(p1DescMsg =>{
+							player1.send({content:`Please select an action`, components:[menuSelectNoDes]}).then(p1MenuMsgNoDesc => {
 								player1Collector.once('collect',player1ChoiceInt2 => {
-									player1Choice = player1ChoiceInt2.customId;
+									player1Choice = player1ChoiceInt2.values[0];
 									player1.send(`Getting player 2 action for this turn...`);
-									player2Menu(lastGlobalMessage);
+									player2Menu();
 								})
 							}).catch(e => {
 								message.channel.send(`Failed to send message to player 1 (make sure you have DM's on for this server!)`);
@@ -301,7 +281,7 @@ module.exports = {
 					}
 					else{
 						player1.send(`Getting player 2 action for this turn...`);
-						player2Menu(lastGlobalMessage);
+						player2Menu();
 					}
 				})
 			}).catch(() => {
@@ -309,29 +289,23 @@ module.exports = {
 			});
 		}
 		
-		async function player2Menu(lastGlobalMessage){
-			//same as player 1 but this time it ends with the turn taking place
-			let p2menu = menu + `\nYour HP -> ${player2HP}`;
-			player2.send(p2menu,{code:true}).then(p2MenuMsg =>{
-				player2.dmChannel.awaitMessages(menuFilter, {max:1,time:120000,errors:['time']}).then(p2Choice => {
+		async function player2Menu(){
+			//begin battle
+			let p2menu = Formatters.codeBlock(`Your HP -> ${player2HP}\nSelect an Action`);
+			player2.send({content:p2menu,components:[menuSelect]}).then(p2MenuMsg =>{
+				player2Collector.once('collect', player2ChoiceInt => {
 					//use player 2 menu response to determine next action
-					player2Choice = p2Choice.first().content;
-					p2MenuMsg.delete();
+					player2Choice = player2ChoiceInt.values[0];
+					player2ChoiceInt.update({components:[]});
 					//special handle for description
 					if(player2Choice === 'description'){
-						player2.send(characterDescription(player2Class),{code:true}).then(p2DescMsg =>{
-							player2.send(menuNoDesc,{code:true}).then(p2MenuMsgNoDesc => {
-								player2.dmChannel.awaitMessages(menuFilterNoDesc, {max:1,time:120000,errors:['time']}).then(p2ChoiceNoDes => {
-									player2Choice = p2ChoiceNoDes.first().content;
-									p2DescMsg.delete();
-									player2.send(`The turn will now take place...`);
-									doTurn(lastGlobalMessage);
-								}).catch(e => {
-									player1.send(`Player 2 didn't respond in time`);
-									player2.send(`You didn't respond in time`);
-									message.channel.send(`Player 2 didn't type their response correctly or time expired to respond`);
-									return;
-								});
+						player2.send(characterDescription(player2Class)).then(p2DescMsg =>{
+							player2.send({content:`Please select an action`, components:[menuSelectNoDes]}).then(p2MenuMsgNoDesc => {
+								player2Collector.once('collect',player2ChoiceInt2 => {
+									player2Choice = player2ChoiceInt2.values[0];
+									player2.send(`Getting player 2 action for this turn...`);
+									doTurn();
+								})
 							}).catch(e => {
 								message.channel.send(`Failed to send message to player 2 (make sure you have DM's on for this server!)`);
 								return;
@@ -342,20 +316,15 @@ module.exports = {
 						});;
 					}
 					else{
-						player2.send(`The turn will now take place...`);
-						doTurn(lastGlobalMessage);
+						doTurn();
 					}
-				}).catch(challChoice => {
-					player1.send(`Player 2 didn't respond in time`);
-					player2.send(`You didn't respond in time`);
-					message.channel.send(`Player 2 didn't type their response correctly or time expired to respond`);
-				});
+				})
 			}).catch(() => {
 				message.channel.send(`Failed to send DM to Player 2 (make sure you have DM's on for this server!)`);
 			});
 		}
 		
-		function doTurn(lastGlobalMessage){
+		function doTurn(){
 			turnCount += 1;
 			let info = `Turn ${turnCount}\n`;
 			//get info that doesnt change
@@ -415,11 +384,11 @@ module.exports = {
 							
 							info += `${enemyName} uses '${player2Class.skill.name}' on ${playerName}!\n`;
 							if(player1HP <= 0){
-								lastGlobalMessage.delete();
 								info += `${playerName} topples over and dies! ${enemyName} has won!\n`;
-								player1.send(info,{code:true});
-								player2.send(info,{code:true});
-								message.channel.send(info,{code:true});
+								info = Formatters.codeBlock(info);
+								player1.send(info);
+								player2.send(info);
+								interaction.editReply(info);
 								return;
 							}
 						}
@@ -453,11 +422,11 @@ module.exports = {
 						
 						info += `${playerName} uses '${player1Class.skill.name}' on ${enemyName}!\n`;
 						if(player2HP <= 0){
-							lastGlobalMessage.delete();
 							info += `${enemyName} topples over and dies! ${playerName} has won!\n`;
-							player1.send(info,{code:true});
-							player2.send(info,{code:true});
-							message.channel.send(info,{code:true});
+							info = Formatters.codeBlock(info);
+							player1.send(info);
+							player2.send(info);
+							interaction.editReply(info);
 							return;
 						}
 					}
@@ -491,11 +460,11 @@ module.exports = {
 						
 						info += `${enemyName} uses '${player2Class.skill.name}' on ${playerName}!\n`;
 						if(player1HP <= 0){
-							lastGlobalMessage.delete();
 							info += `${playerName} topples over and dies! ${enemyName} has won!\n`;
-							player1.send(info,{code:true});
-							player2.send(info,{code:true});
-							message.channel.send(info,{code:true});
+							info = Formatters.codeBlock(info);
+							player1.send(info);
+							player2.send(info);
+							interaction.editReply(info);
 							return;
 						}
 					}
@@ -524,11 +493,11 @@ module.exports = {
 						player1HP -= player2Damage;
 						info += `${enemyName} strikes ${playerName} with their ${player2Class.weapon.name} for ${player2Damage} damage!\n`;
 						if(player1HP <= 0){
-							lastGlobalMessage.delete();
 							info += `${playerName} topples over and dies! ${enemyName} has won!\n`;
-							player1.send(info,{code:true});
-							player2.send(info,{code:true});
-							message.channel.send(info,{code:true});
+							info = Formatters.codeBlock(info);
+							player1.send(info);
+							player2.send(info);
+							message.channel.send(info);
 							return;
 						}
 					}
@@ -547,11 +516,11 @@ module.exports = {
 					player2HP -= player1Damage;
 					info += `${playerName} strikes ${enemyName} with their ${player1Class.weapon.name} for ${player1Damage} damage!\n`;
 					if(player2HP <= 0){
-						lastGlobalMessage.delete();
 						info += `${enemyName} topples over and dies! ${playerName} has won!\n`;
-						player1.send(info,{code:true});
-						player2.send(info,{code:true});
-						message.channel.send(info,{code:true});
+						info = Formatters.codeBlock(info);
+						player1.send(info);
+						player2.send(info);
+						interaction.editReply(info);
 						return;
 					}
 				}
@@ -571,10 +540,10 @@ module.exports = {
 					info += `${enemyName} strikes ${playerName} with their ${player2Class.weapon.name} for ${player2Damage} damage!\n`;
 					if(player1HP <= 0){
 						info += `${playerName} topples over and dies! ${enemyName} has won!\n`;
-						lastGlobalMessage.delete();
-						player1.send(info,{code:true});
-						player2.send(info,{code:true});
-						message.channel.send(info,{code:true});
+						info = Formatters.codeBlock(info);
+						player1.send(info);
+						player2.send(info);
+						interaction.editReply(info);
 						return;
 					}
 				}
@@ -623,11 +592,11 @@ module.exports = {
 			if(player2Class.skill.currentCooldown > 0){
 				player2Class.skill.currentCooldown -= 1;
 			}
-			lastGlobalMessage.delete();
-			player1.send(info,{code:true});
-			player2.send(info,{code:true});
-			message.channel.send(info,{code:true}).then(newGlbMsg => {
-				player1Menu(newGlbMsg);
+			info = Formatters.codeBlock(info);
+			player1.send(info);
+			player2.send(info);
+			interaction.editReply(info).then(() => {
+				player1Menu();
 			});
 		}
 	}
@@ -638,5 +607,5 @@ function characterDescription(character){
 	for(let i=0;i<character.debuffs.length;i++){
 		debuffList += `${character.debuffs[i].name} for ${character.debuffs[i].duration}\n`;
 	}
-	return `The ${character.name}...\nSTATS\nStrength......${character.attributes.strength}\nAgility.......${character.attributes.agility}\nToughness.....${character.attributes.toughness}\nIntelligence..${character.attributes.intelligence}\nWillpower.....${character.attributes.willpower}\nEgo...........${character.attributes.ego}\nSKILL\n${character.skill.name}\n${character.skill.description}\n${character.skill.currentCooldown} Turns until available (0 means ready)\nEQUIPMENT\nHead.........${character.equipment.head.name} ${character.equipment.head.av} AV ${character.equipment.head.dv} DV\nFace.........${character.equipment.face.name} ${character.equipment.face.av} AV ${character.equipment.face.dv} DV\nBody.........${character.equipment.body.name} ${character.equipment.body.av} AV ${character.equipment.body.dv} DV\nArms.........${character.equipment.arms.name} ${character.equipment.arms.av} AV ${character.equipment.arms.dv} DV\nFeet.........${character.equipment.feet.name} ${character.equipment.feet.av} AV ${character.equipment.feet.dv} DV\nWEAPON\n${character.weapon.name}.....${character.weapon.pv}/${character.weapon.maxPv} PV ${character.weapon.damage} damage\nCURRENT DEBUFFS\n${debuffList}`;
+	return Formatters.codeBlock(`The ${character.name}...\nSTATS\nStrength......${character.attributes.strength}\nAgility.......${character.attributes.agility}\nToughness.....${character.attributes.toughness}\nIntelligence..${character.attributes.intelligence}\nWillpower.....${character.attributes.willpower}\nEgo...........${character.attributes.ego}\nSKILL\n${character.skill.name}\n${character.skill.description}\n${character.skill.currentCooldown} Turns until available (0 means ready)\nEQUIPMENT\nHead.........${character.equipment.head.name} ${character.equipment.head.av} AV ${character.equipment.head.dv} DV\nFace.........${character.equipment.face.name} ${character.equipment.face.av} AV ${character.equipment.face.dv} DV\nBody.........${character.equipment.body.name} ${character.equipment.body.av} AV ${character.equipment.body.dv} DV\nArms.........${character.equipment.arms.name} ${character.equipment.arms.av} AV ${character.equipment.arms.dv} DV\nFeet.........${character.equipment.feet.name} ${character.equipment.feet.av} AV ${character.equipment.feet.dv} DV\nWEAPON\n${character.weapon.name}.....${character.weapon.pv}/${character.weapon.maxPv} PV ${character.weapon.damage} damage\nCURRENT DEBUFFS\n${debuffList}`);
 }

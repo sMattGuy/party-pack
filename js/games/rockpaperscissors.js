@@ -56,7 +56,7 @@ module.exports = {
 				if(noGame){
 					await interaction.deleteReply().catch(e => console.log('no interaction exists'));
 				}
-			})
+			});
 		});
 		async function acceptRPS(){
 			//begin battle

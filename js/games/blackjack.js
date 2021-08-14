@@ -86,11 +86,11 @@ module.exports = {
 					playing = true;
 					if(buttInteraction.customId == 'hit'){
 						await buttInteraction.update({components:[]});
-						blackjackHit(buttInteraction);
+						blackjackHit(interaction);
 					}
 					else if(buttInteraction.customId == 'stand'){
 						await buttInteraction.update({components:[]});
-						blackjackStand(buttInteraction);
+						blackjackStand(interaction);
 					}
 				});
 				collector.once('end',collection => {
@@ -125,11 +125,7 @@ module.exports = {
 				}
 				if(currentTotal > 21){
 					let resultsOfGame = `Bust! You drew a ${blackjackCards[newCard]}, ${challengerName}, you lose!\nYou:${cardViewer}\n`;
-					drawBoard(hitInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,currentTotal,challengerName,dealerValue[dealerCards[0]%13]+dealerValue[dealerCards[1]%13],challengerImage)
-					.catch(error => {
-						console.log(error);
-						hitInteraction.reply(resultsOfGame);
-					});
+					drawBoard(hitInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,currentTotal,challengerName,dealerValue[dealerCards[0]%13]+dealerValue[dealerCards[1]%13],challengerImage);
 				}
 				else{
 					let currentText = currentTotal;
@@ -144,23 +140,19 @@ module.exports = {
 							contPlaying = true;
 							if(bi.customId == 'hit'){
 								await bi.update({components:[]});
-								blackjackHit(bi);
+								blackjackHit(hitInteraction);
 							}
 							else if(bi.customId == 'stand'){
 								await bi.update({components:[]});
-								blackjackStand(bi);
+								blackjackStand(hitInteraction);
 							}
 						});
 						collector.once('end',collection => {
-						if(!contPlaying){
-							hitInteraction.deleteReply().catch(e => {console.log('interaction doesnt exist')});
-						}
-				});
-					})
-					.catch(error => {
-						console.log(error);
-						hitInteraction.reply(resultsOfGame);
-					});;
+							if(!contPlaying){
+								hitInteraction.deleteReply().catch(e => {console.log('interaction doesnt exist')});
+							}
+						});
+					});
 				}
 			}
 
@@ -218,11 +210,7 @@ module.exports = {
 					if(playerAceBust && playerValueBust + 10 <= 21){
 						playerValueBust += 10;
 					}
-					drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValueBust,challengerName,dealerTotal,challengerImage)
-					.catch(error => {
-						console.log(error);
-						standInteraction.reply(resultsOfGame);
-					});
+					drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValueBust,challengerName,dealerTotal,challengerImage);
 				}
 				else{
 					let playerValue = 0;
@@ -241,28 +229,19 @@ module.exports = {
 						//player wins
 						let resultsOfGame = `${challengerName}, you have ${playerValue}, Dealer has ${dealerTotal}. You've won!\nYou:${playerViewer}. Dealer:${cardViewer}\n`;
 						console.log(challengerName + ' won in blackjack');
-						drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage).catch(error => {
-							console.log(error);
-							standInteraction.reply(resultsOfGame);
-						});
+						drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage)
 					}
 					else if(dealerTotal > playerValue){
 						//player lose
 						let resultsOfGame = `${challengerName}, you have ${playerValue}, Dealer has ${dealerTotal}. You've lost!\nYou:${playerViewer}. Dealer:${cardViewer}\n`;
 						console.log(challengerName + ' lost in blackjack');
-						drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage).catch(error => {
-							console.log(error);
-							standInteraction.reply(resultsOfGame);
-						});
+						drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage);
 					}
 					else{
 						//draw
 						let resultsOfGame = `${challengerName}, you have ${playerValue}, Dealer has ${dealerTotal}. It's a draw!\nYou:${playerViewer}. Dealer:${cardViewer}`;
 						console.log(challengerName + ' drew in blackjack');
-						drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage).catch(error => {
-							console.log(error);
-							standInteraction.reply(resultsOfGame);
-						});
+						drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage);
 					}
 				}
 			}
@@ -274,7 +253,7 @@ module.exports = {
 
 //create board for blackjack
 async function drawBoard(interaction, hiddenDealer, gameMessage, playerCards, dealerCards, unstable, ender, playerVal, playerName, dealerVal,userIcon){
-	interaction.deleteReply();
+	await interaction.editReply({attachments:[]});
 	const canvas = Canvas.createCanvas(496,288);
 	const ctx = canvas.getContext('2d');
 	const background = await Canvas.loadImage('./cardImages/pokertable.jpg');
@@ -336,7 +315,7 @@ async function drawBoard(interaction, hiddenDealer, gameMessage, playerCards, de
 		);
 	const attachment = new MessageAttachment(canvas.toBuffer(), 'board.png');
 	if(ender){
-		return await interaction.followUp({content:`${gameMessage}`,files:[attachment]});
+		return await interaction.editReply({content:`${gameMessage}`,files:[attachment]});
 	}
-	return await interaction.followUp({content:`${gameMessage}`,files:[attachment],components: [row]});
+	return await interaction.editReply({content:`${gameMessage}`,files:[attachment],components: [row]});
 }
