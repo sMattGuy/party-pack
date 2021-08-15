@@ -41,7 +41,7 @@ module.exports = {
 		);
 		const accCollector = await interaction.channel.createMessageComponentCollector({filter:startFilter, time: 60000});
 		let noGame = true;
-		await interaction.editReply({content:`@${optionOpp.tag}! Type 'accept' to accept the rock paper scissors battle, or type 'deny' to refuse the battle! You have 1 min to respond!`,components:[accRow]}).then(msg => {
+		await interaction.editReply({content:`${optionOpp}! Type 'accept' to accept the rock paper scissors battle, or type 'deny' to refuse the battle! You have 1 min to respond!`,components:[accRow]}).then(msg => {
 			accCollector.once('collect', async buttInteraction => {
 				noGame = false;
 				if(buttInteraction.customId == 'accept'){
