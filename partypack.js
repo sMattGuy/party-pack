@@ -12,6 +12,8 @@ const credentials = require('./auth.json');
 client.commands = new Collection();
 const commandFolders = fs.readdirSync('./js');
 
+const messageMap = new Map();
+
 for(const folder of commandFolders){
 	const commandFiles = fs.readdirSync(`./js/${folder}`).filter(file => file.endsWith(`.js`));
 	for(const file of commandFiles){
@@ -33,6 +35,32 @@ client.on('ready', () => {
 });
 
 client.on('messageCreate', async message => {
+	//haha funny
+	if(messageMap.has(message.channel.id) && !message.author.bot){
+		if(messageMap.get(message.channel.id).content == message.content && messageMap.get(message.channel.id).author != message.author.id){
+			let messUpdate = messageMap.get(message.channel.id);
+			messUpdate.times += 1;
+			messUpdate.author = message.author.id;
+			messageMap.set(message.channel.id,messUpdate);
+			if(messUpdate.times == 3){
+				if(messUpdate.content.length != 0){
+					message.channel.send(messUpdate.content);
+				}
+				else{
+					message.channel.send({stickers:messUpdate.sticker}).catch(() => {console.log('could not send sticker')});
+				}
+				messageMap.delete(message.channel.id);
+			}
+		}
+		else{
+			let newInput = {content:message.content,times:1,author:message.author.id,sticker:message.stickers};
+			messageMap.set(message.channel.id,newInput);
+		}
+	}
+	else{
+		let newInput = {content:message.content,times:1,author:message.author.id,sticker:message.stickers};
+		messageMap.set(message.channel.id,newInput);
+	}
 	if (message.content.toLowerCase() === '!partypack deploy' && message.author.id == '492850107038040095') {
 		await client.guilds.cache.get(message.guildId).commands.set([]);
 		console.log('deploying commands');
