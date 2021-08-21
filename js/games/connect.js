@@ -187,7 +187,9 @@ module.exports = {
 				});
 			}
 			drawConnect(frameInteraction,`${info}`,boardArray,false).then(lastReply =>{
+				let turnMissed = true;
 				gameCollector.once('collect',async bi =>{
+					turnMissed = false;
 					//parsing of choice begins here
 					let number = parseInt(bi.customId);
 					if(boardArray[number][0] == 1 || boardArray[number][0] == -1){
@@ -264,7 +266,11 @@ module.exports = {
 						}
 					}
 				});
-				gameCollector.once('end', collected => {});
+				gameCollector.once('end', collected => {
+					if(turnMissed){
+						await interaction.deleteReply().catch(e => console.log('no interaction exists'));
+					}
+				});
 			});
 		}
 	}
