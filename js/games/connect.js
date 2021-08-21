@@ -266,7 +266,7 @@ module.exports = {
 						}
 					}
 				});
-				gameCollector.once('end', collected => {
+				gameCollector.once('end', async collected => {
 					if(turnMissed){
 						await interaction.deleteReply().catch(e => console.log('no interaction exists'));
 					}
