@@ -3,7 +3,7 @@
 const { Op } = require('sequelize');
 const { Client, Intents, Collection, Formatters } = require('discord.js');
 const fs = require('fs');
-const { Users } = require('./dbObjects.js');
+const { Users, Guilds } = require('./dbObjects.js');
 
 // Create an instance of a Discord client
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES] });

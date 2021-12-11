@@ -149,6 +149,14 @@ module.exports = {
 			await interaction.reply({content: `Your opponent doesn't have enough coin!`, ephemeral: true});
 			return;
 		}
+		
+		const guildID = interaction.guildId;
+		const user = await currency.get(workingID);
+		await user.addGuild(guildID);
+		
+		user = await currency.get(enemyID);
+		await user.addGuild(guildID);
+		
 		await interaction.reply(`Playing Connect4`);
 		//variables to store about player
 		let id = interaction.user.id;

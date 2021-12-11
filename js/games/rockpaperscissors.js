@@ -38,6 +38,14 @@ module.exports = {
 			await interaction.reply({content: `Your opponent doesn't have enough coin!`,ephemeral: true});
 			return;
 		}
+		
+		const guildID = interaction.guildId;
+		const user = await currency.get(challengerID);
+		await user.addGuild(guildID);
+		
+		user = await currency.get(opponentID)
+		await user.addGuild(guildID);
+		
 		await interaction.reply(`Starting RPS`);
 		//get the acceptance of battle
 		const startFilter = i => i.user.id === opponentID && (i.customId === 'accept' || i.customId === 'deny');

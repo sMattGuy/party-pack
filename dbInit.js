@@ -6,6 +6,7 @@ const sequelize = new Sequelize({
 });
 
 require('./models/Users.js')(sequelize, Sequelize.DataTypes);
+require('./models/Guilds.js')(sequelize, Sequelize.DataTypes);
 
 const force = process.argv.includes('--force') || process.argv.includes('-f');
 

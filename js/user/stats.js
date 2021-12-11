@@ -6,7 +6,13 @@ module.exports = {
 	description: 'see your stats',
 	async execute(interaction,currency){
 		const target = interaction.options.getUser('user') ?? interaction.user;
+		
 		const balance = await currency.getBalance(target.id);
+		
+		const guildID = interaction.guildId;
+		const user = await currency.get(target.id);
+		await user.addGuild(guildID);
+		
 		const statsEmbed = new MessageEmbed()
 			.setColor('#7700E6')
 			.setTitle(`${target.username}'s Stats`)

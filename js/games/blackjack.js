@@ -24,6 +24,11 @@ module.exports = {
 			interaction.reply({content:`You don't have enough coin!`,ephemeral: true});
 			return;
 		}
+		
+		const guildID = interaction.guildId;
+		const user = await currency.get(challengerID);
+		await user.addGuild(guildID);
+		
 		console.log(challengerName + ' has started blackjack');	
 		await interaction.reply(`Starting blackjack`);
 		let usedCards = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];

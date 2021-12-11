@@ -62,6 +62,19 @@ const commands = [
 	new SlashCommandBuilder()
 		.setName('leaderboard')
 		.setDescription('See who is the best!'),
+	new SlashCommandBuilder()
+		.setName('pay')
+		.setDescription('Pay another user some coin!')
+		.addUserOption(option => 
+			option
+				.setName('user')
+				.setDescription('The user to pay')
+				.setRequired(true))
+		.addIntegerOption(option =>
+			option
+				.setName('amount')
+				.setDescription('How much you want to give')
+				.setRequired(true)),
 ]
 .map(command => command.toJSON());
 

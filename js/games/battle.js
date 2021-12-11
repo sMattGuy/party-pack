@@ -176,6 +176,13 @@ module.exports = {
 			return;
 		}
 		
+		const guildID = interaction.guildId;
+		const user = await currency.get(playerID);
+		await user.addGuild(guildID);
+		
+		user = await currency.get(enemyID);
+		await user.addGuild(guildID);
+		
 		await interaction.reply(`Starting battle...`);
 		
 		//variables to store about player
