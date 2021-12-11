@@ -40,7 +40,7 @@ module.exports = {
 		}
 		
 		const guildID = interaction.guildId;
-		const user = await currency.get(challengerID);
+		let user = await currency.get(challengerID);
 		await user.addGuild(guildID);
 		
 		user = await currency.get(opponentID)

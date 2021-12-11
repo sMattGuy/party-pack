@@ -38,7 +38,7 @@ module.exports = {
 		//force creation of new user if they dont exist
 		await currency.getBalance(getterID);
 		
-		const guildID = interaction.guildId;
+		let guildID = interaction.guildId;
 		const user = await currency.get(giverID);
 		await user.addGuild(guildID);
 		

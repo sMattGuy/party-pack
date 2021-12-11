@@ -177,7 +177,7 @@ module.exports = {
 		}
 		
 		const guildID = interaction.guildId;
-		const user = await currency.get(playerID);
+		let user = await currency.get(playerID);
 		await user.addGuild(guildID);
 		
 		user = await currency.get(enemyID);

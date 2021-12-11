@@ -307,7 +307,7 @@ async function drawBoard(interaction, hiddenDealer, gameMessage, playerCards, de
 	//carl name and val
 	ctx.font = 'bold 20px sans-serif';
 	ctx.fillStyle = '#ffffff';
-	ctx.fillText('ParlPoin', 320, 160);
+	ctx.fillText('Dealer', 320, 160);
 	ctx.font = 'bold 20px sans-serif';
 	ctx.fillStyle = '#ffffff';
 	ctx.fillText(dealerVal, 390, 135);
