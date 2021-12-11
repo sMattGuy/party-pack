@@ -145,24 +145,39 @@ const classSelect = new MessageActionRow()
 module.exports = {
 	name: 'battle',
 	description: 'the battle game',
-	async execute(interaction){
+	async execute(interaction,currency){
 		let player = interaction.user;
 		let playerID = player.id;
 		let playerName = player.username;
 		let enemy = interaction.options.getUser('user'); 
 		let enemyID = enemy.id;
 		let enemyName = enemy.username;
-		await interaction.reply(`Starting battle...`);
+		let betAmount = interaction.options.getInteger('bet');
+		if(betAmount < 0){
+			await interaction.reply({ content: `Invalid bet amount!`, ephemeral: true });
+			return;
+		}
 		//check if trying to battle self temp disabled for testing
-
 		if(playerID == enemyID){
-			interaction.editReply('You cannot play with yourself..... weirdo');
+			interaction.reply({ content: 'You cannot play with yourself..... weirdo', ephemeral: true });
 			return;
 		}
 		if(enemy.bot){
-			interaction.editReply('You cannot play with yourself..... weirdo');
+			interaction.reply({ content: 'You cannot play with an AI', ephemeral: true });
 			return;
 		}
+		
+		if(await currency.getBalance(playerID) - betAmount < 0){
+			interaction.reply({ content: `You don't have enough coins!`, ephemeral: true });
+			return;
+		}
+		if(await currency.getBalance(enemyID) - betAmount < 0){
+			interaction.reply({ content: `Your opponent doesn't have enough coins!`, ephemeral: true });
+			return;
+		}
+		
+		await interaction.reply(`Starting battle...`);
+		
 		//variables to store about player
 		let id = interaction.user.id;
 		
@@ -203,7 +218,7 @@ module.exports = {
 		const player1Collector = await player1DM.createMessageComponentCollector();
 		const player2Collector = await player2DM.createMessageComponentCollector();
 		
-		await interaction.editReply({content:`${enemy}! Type 'accept' to accept the battle, or 'deny' to reject the battle, You have 1 min to respond!`,components:[accRow]}).then(msg => {
+		await interaction.editReply({content:`${enemy}! With ${betAmount} coins on the line, Click 'accept' to accept the battle, or 'deny' to reject the battle, You have 1 min to respond!`,components:[accRow]}).then(msg => {
 			accCollector.once('collect',async buttInteraction => {
 				noGame = false;
 				if(buttInteraction.customId == 'accept'){
@@ -388,6 +403,11 @@ module.exports = {
 							info += `${enemyName} uses '${player2Class.skill.name}' on ${playerName}!\n`;
 							if(player1HP <= 0){
 								info += `${playerName} topples over and dies! ${enemyName} has won!\n`;
+								//update users
+								currency.addBalance(enemyID,betAmount);
+								currency.addWin(enemyID);
+								currency.subBalance(playerID,betAmount);
+								currency.addLoss(playerID);
 								info = Formatters.codeBlock(info);
 								player1.send(info);
 								player2.send(info);
@@ -426,6 +446,11 @@ module.exports = {
 						info += `${playerName} uses '${player1Class.skill.name}' on ${enemyName}!\n`;
 						if(player2HP <= 0){
 							info += `${enemyName} topples over and dies! ${playerName} has won!\n`;
+							//update users
+							currency.addBalance(playerID,betAmount);
+							currency.addWin(playerID);
+							currency.subBalance(enemyID,betAmount);
+							currency.addLoss(enemyID);
 							info = Formatters.codeBlock(info);
 							player1.send(info);
 							player2.send(info);
@@ -464,6 +489,11 @@ module.exports = {
 						info += `${enemyName} uses '${player2Class.skill.name}' on ${playerName}!\n`;
 						if(player1HP <= 0){
 							info += `${playerName} topples over and dies! ${enemyName} has won!\n`;
+							//update users
+							currency.addBalance(enemyID,betAmount);
+							currency.addWin(enemyID);
+							currency.subBalance(playerID,betAmount);
+							currency.addLoss(playerID);
 							info = Formatters.codeBlock(info);
 							player1.send(info);
 							player2.send(info);
@@ -497,6 +527,11 @@ module.exports = {
 						info += `${enemyName} strikes ${playerName} with their ${player2Class.weapon.name} for ${player2Damage} damage!\n`;
 						if(player1HP <= 0){
 							info += `${playerName} topples over and dies! ${enemyName} has won!\n`;
+							//update users
+							currency.addBalance(enemyID,betAmount);
+							currency.addWin(enemyID);
+							currency.subBalance(playerID,betAmount);
+							currency.addLoss(playerID);
 							info = Formatters.codeBlock(info);
 							player1.send(info);
 							player2.send(info);
@@ -520,6 +555,11 @@ module.exports = {
 					info += `${playerName} strikes ${enemyName} with their ${player1Class.weapon.name} for ${player1Damage} damage!\n`;
 					if(player2HP <= 0){
 						info += `${enemyName} topples over and dies! ${playerName} has won!\n`;
+						//update users
+						currency.addBalance(playerID,betAmount);
+						currency.addWin(playerID);
+						currency.subBalance(enemyID,betAmount);
+						currency.addLoss(enemyID);
 						info = Formatters.codeBlock(info);
 						player1.send(info);
 						player2.send(info);
@@ -543,6 +583,11 @@ module.exports = {
 					info += `${enemyName} strikes ${playerName} with their ${player2Class.weapon.name} for ${player2Damage} damage!\n`;
 					if(player1HP <= 0){
 						info += `${playerName} topples over and dies! ${enemyName} has won!\n`;
+						//update users
+						currency.addBalance(enemyID,betAmount);
+						currency.addWin(enemyID);
+						currency.subBalance(playerID,betAmount);
+						currency.addLoss(playerID);
 						info = Formatters.codeBlock(info);
 						player1.send(info);
 						player2.send(info);

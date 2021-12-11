@@ -1,10 +1,72 @@
 'use strict';
 // Import the discord.js module and others
-const { Client, Intents, Collection } = require('discord.js');
+const { Op } = require('sequelize');
+const { Client, Intents, Collection, Formatters } = require('discord.js');
 const fs = require('fs');
+const { Users } = require('./dbObjects.js');
 
 // Create an instance of a Discord client
 const client = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.DIRECT_MESSAGES] });
+
+const currency = new Collection();
+
+let newDay = true;
+
+Reflect.defineProperty(currency, 'addBalance', {
+	value: async function addBalance(id, amount){
+		const user = currency.get(id);
+		
+		user.balance += Number(amount);
+		return user.save();
+	},
+});
+Reflect.defineProperty(currency, 'subBalance', {
+	value: async function subBalance(id, amount){
+		const user = currency.get(id);
+		
+		user.balance -= Number(amount);
+		return user.save();
+	},
+});
+Reflect.defineProperty(currency, 'addWin', {
+	value: async function addWin(id){
+		const user = currency.get(id);
+		
+		user.wins += 1;
+		return user.save();
+	},
+});
+Reflect.defineProperty(currency, 'getWin', {
+	value: async function getWin(id){
+		const user = currency.get(id);
+		return user.wins;
+	},
+});
+Reflect.defineProperty(currency, 'addLoss', {
+	value: async function addLoss(id){
+		const user = currency.get(id);
+		
+		user.loses += 1;
+		return user.save();
+	},
+});
+Reflect.defineProperty(currency, 'getLoss', {
+	value: async function getLoss(id){
+		const user = currency.get(id);
+		return user.loses;
+	},
+});
+Reflect.defineProperty(currency, 'getBalance', {
+	value: async function getBalance(id){
+		const user = currency.get(id);
+		if(user){
+			return user.balance;
+		}
+		const newUser = await Users.create({user_id: id, balance: 10, wins: 0, loses: 0});
+		currency.set(id, newUser);
+		return 10;
+	},
+});
 
 // import token and database
 const credentials = require('./auth.json');
@@ -23,7 +85,9 @@ for(const folder of commandFolders){
 }
 
 //sets ready presense
-client.on('ready', () => {
+client.on('ready', async () => {
+	const storedBalances = await Users.findAll();
+	storedBalances.forEach(b => currency.set(b.user_id, b));
 	client.user.setPresence({
 		status: 'online',
 	});
@@ -35,6 +99,7 @@ client.on('ready', () => {
 });
 
 client.on('messageCreate', async message => {
+	resetBalance();
 	//haha funny
 	if(messageMap.has(message.channel.id) && !message.author.bot){
 		if(messageMap.get(message.channel.id).content == message.content && messageMap.get(message.channel.id).author != message.author.id){
@@ -61,63 +126,38 @@ client.on('messageCreate', async message => {
 		let newInput = {content:message.content,times:1,author:message.author.id,sticker:message.stickers};
 		messageMap.set(message.channel.id,newInput);
 	}
-	if (message.content.toLowerCase() === '!partypack deploy' && message.author.id == '492850107038040095') {
-		await client.guilds.cache.get(message.guildId).commands.set([]);
-		console.log('deploying commands');
-		const data = [
-		{
-			name: 'blackjack',
-			description: 'Lets you play a game of Blackjack!',
-		},
-		{
-			name: 'battle',
-			description: 'Starts a battle with another player!',
-			options: [{
-				name: 'user',
-				type: 'USER',
-				description: 'The users ID or mention',
-				required: true,
-			}],
-		},
-		{
-			name: 'connect4',
-			description: 'Starts a connect 4 game with someone!',
-			options: [{
-				name: 'user',
-				type: 'USER',
-				description: 'The users ID or mention',
-				required: true,
-			}],
-		},
-		{
-			name: 'rps',
-			description: 'Starts a Rock Paper Scissors game with someone!',
-			options: [{
-				name: 'user',
-				type: 'USER',
-				description: 'The users ID or mention',
-				required: true,
-			}],
-		},
-		];
-
-		const command = await client.guilds.cache.get(message.guildId).commands.set(data);
-		console.log(command);
-	}
 });
 
 client.on('interactionCreate', async interaction => {
+	resetBalance();
 	if (!interaction.isCommand()) return;
-
-	if (!client.commands.has(interaction.commandName)) return;
+	
+	const command = client.commands.get(interaction.commandName);
+	
+	if (!command) return;
 
 	try {
-		await client.commands.get(interaction.commandName).execute(interaction);
+		await command.execute(interaction,currency,client);
 	} catch (error) {
 		console.error(error);
 		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
 	}
 });
 
+function resetBalance(){
+	let currentTime = new Date();
+	if(currentTime.getUTCHours < 1 && !newDay){
+		newDay = true;
+	}
+	if(currentTime >= 1 && newDay){
+		newDay = false;
+		currency.forEach(user => {
+			if(user.balance < 10){
+				user.balance = 10;
+				user.save();
+			}
+		});
+	}
+}
 // Log our bot in using the token from https://discord.com/developers/applications
 client.login(`${credentials.token}`);

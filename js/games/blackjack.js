@@ -9,13 +9,23 @@ const blackjackCardsImages = ['AS.png','2S.png','3S.png','4S.png','5S.png','6S.p
 module.exports = {
 	name: 'blackjack',
 	description: 'the game blackjack',
-	async execute(interaction){
-		await interaction.reply(`Starting blackjack`);
+	async execute(interaction,currency){
+		
 		let challengerID = interaction.user.id;
 		let challengerName = interaction.user.username;
 		let challengerImage = interaction.user.displayAvatarURL({format:'png'});
 		let cardValue = [11,2,3,4,5,6,7,8,9,10,10,10,10];
+		let betAmount = interaction.options.getInteger('bet');
+		if(betAmount < 0){
+			interaction.reply({content:`Invalid bet amount entered!`,ephemeral: true});
+			return;
+		}
+		if(await currency.getBalance(challengerID) - betAmount < 0){
+			interaction.reply({content:`You don't have enough coin!`,ephemeral: true});
+			return;
+		}
 		console.log(challengerName + ' has started blackjack');	
+		await interaction.reply(`Starting blackjack`);
 		let usedCards = [false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false,false];
 		//dealer
 		let dealerCard1 = (Math.floor(Math.random() * 52));
@@ -55,6 +65,8 @@ module.exports = {
 					console.log(error);
 					interaction.editReply(resultsOfGame);
 				});
+				currency.addBalance(challengerID, betAmount);
+				currency.addWin(challengerID);
 			}
 		}
 		else if(((dealerCard1%13 == 0)&&(dealerCard2%13 == 9 || dealerCard2%13 == 10 || dealerCard2%13 == 11 || dealerCard2%13 == 12)) || ((dealerCard2%13 == 0)&&(dealerCard1%13 == 9 || dealerCard1%13 == 10 || dealerCard1%13 == 11 || dealerCard1%13 == 12))){
@@ -64,6 +76,8 @@ module.exports = {
 				console.log(error);
 				interaction.editReply(resultsOfGame);
 			});
+			currency.subBalance(challengerID, betAmount);
+			currency.addLoss(challengerID);
 		}
 		else{
 			let playersValue = cardValue[playerCards[0]%13]+cardValue[playerCards[1]%13];
@@ -126,6 +140,8 @@ module.exports = {
 				if(currentTotal > 21){
 					let resultsOfGame = `Bust! You drew a ${blackjackCards[newCard]}, ${challengerName}, you lose!\nYou:${cardViewer}\n`;
 					drawBoard(hitInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,currentTotal,challengerName,dealerValue[dealerCards[0]%13]+dealerValue[dealerCards[1]%13],challengerImage);
+					currency.subBalance(challengerID, betAmount);
+					currency.addLoss(challengerID);
 				}
 				else{
 					let currentText = currentTotal;
@@ -211,6 +227,8 @@ module.exports = {
 						playerValueBust += 10;
 					}
 					drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValueBust,challengerName,dealerTotal,challengerImage);
+					currency.addBalance(challengerID, betAmount);
+					currency.addWin(challengerID);
 				}
 				else{
 					let playerValue = 0;
@@ -229,13 +247,17 @@ module.exports = {
 						//player wins
 						let resultsOfGame = `${challengerName}, you have ${playerValue}, Dealer has ${dealerTotal}. You've won!\nYou:${playerViewer}. Dealer:${cardViewer}\n`;
 						console.log(challengerName + ' won in blackjack');
-						drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage)
+						drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage);
+						currency.addBalance(challengerID, betAmount);
+						currency.addWin(challengerID);
 					}
 					else if(dealerTotal > playerValue){
 						//player lose
 						let resultsOfGame = `${challengerName}, you have ${playerValue}, Dealer has ${dealerTotal}. You've lost!\nYou:${playerViewer}. Dealer:${cardViewer}\n`;
 						console.log(challengerName + ' lost in blackjack');
 						drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage);
+						currency.subBalance(challengerID, betAmount);
+						currency.addLoss(challengerID);
 					}
 					else{
 						//draw
@@ -266,7 +288,7 @@ async function drawBoard(interaction, hiddenDealer, gameMessage, playerCards, de
 	ctx.strokeStyle = '#358a54';
 	ctx.strokeRect(0,105,75,75);
 	
-	const carlCoinImage = await Canvas.loadImage(`./cardImages/carlcoin2.png`);
+	const carlCoinImage = await Canvas.loadImage(`./cardImages/dealer.png`);
 	ctx.drawImage(carlCoinImage,421,105,75,75);
 	ctx.strokeStyle = '#358a54';
 	ctx.strokeRect(421,105,75,75);

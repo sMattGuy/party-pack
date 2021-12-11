@@ -120,23 +120,36 @@ function checkTie(boardArray){
 module.exports = {
 	name: 'connect4',
 	description: 'connect 4',
-	async execute(interaction){
-		await interaction.reply(`Playing Connect4`);
+	async execute(interaction, currency){
 		let optionOpp = interaction.options.getUser('user');
 		let workingID = interaction.user.id;
 		let enemyID = optionOpp.id;
 		let playerName = interaction.user.username;
 		let enemyName = optionOpp.username;
 		let boardArray = [[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]];
+		let betAmount = interaction.options.getInteger('bet');
 		//check if trying to battle self temp disabled for testing
 		if(workingID == enemyID){
-			await interaction.editReply('You cannot play with yourself..... weirdo');
+			await interaction.reply({content: 'You cannot play with yourself..... weirdo', ephemeral: true});
 			return;
 		}
 		if(optionOpp.bot){
-			await interaction.editReply('Robots don\'t like connect 4!');
+			await interaction.reply({content: 'Robots don\'t like connect 4!', ephemeral: true});
 			return;
 		}
+		if(betAmount < 0){
+			await interaction.reply({content: 'Invalid bet amount entered!', ephemeral: true});
+			return;
+		}
+		if(await currency.getBalance(workingID) - betAmount < 0){
+			await interaction.reply({content: `You don't have enough coin!`, ephemeral: true});
+			return;
+		}
+		if(await currency.getBalance(enemyID) - betAmount < 0){
+			await interaction.reply({content: `Your opponent doesn't have enough coin!`, ephemeral: true});
+			return;
+		}
+		await interaction.reply(`Playing Connect4`);
 		//variables to store about player
 		let id = interaction.user.id;
 
@@ -154,7 +167,7 @@ module.exports = {
 				.setStyle('DANGER'),
 		);
 		const accCollector = await interaction.channel.createMessageComponentCollector({filter:startFilter, time: 60000});
-		await interaction.editReply({content:`${optionOpp}! Click 'Accept' to accept the battle, or 'Deny' to reject the battle, You have 1 min to respond!`,components:[accRow]}).then(res => {
+		await interaction.editReply({content:`${optionOpp}! With ${betAmount} coins on the line, Click 'Accept' to accept the connect 4 match, or 'Deny' to reject the connect 4 match, You have 1 min to respond!`,components:[accRow]}).then(res => {
 			let noGame = true;
 			accCollector.once('collect',async buttInteraction => {
 				noGame = false;
@@ -244,6 +257,10 @@ module.exports = {
 									else{
 										info += `${enemyName} has won!\n`;
 									}
+									currency.addBalance(winner,betAmount);
+									currency.addWin(winner);
+									currency.subBalance(loser,betAmount);
+									currency.addLoss(loser);
 									drawConnect(frameInteraction,`${info}`,boardArray,true).then(()=>{
 										return;
 									});
