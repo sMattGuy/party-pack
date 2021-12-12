@@ -39,7 +39,7 @@ module.exports = {
 		await currency.getBalance(getterID);
 		
 		let guildID = interaction.guildId;
-		const user = await currency.get(giverID);
+		let user = await currency.get(giverID);
 		await user.addGuild(guildID);
 		
 		user = await currency.get(getterID);
