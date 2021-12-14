@@ -146,10 +146,12 @@ client.on('interactionCreate', async interaction => {
 
 function resetBalance(){
 	let currentTime = new Date();
-	if(currentTime.getUTCHours < 1 && !newDay){
+	if(currentTime.getUTCHours() < 1 && !newDay){
+		console.log('setting new day true');
 		newDay = true;
 	}
-	if(currentTime >= 1 && newDay){
+	if(currentTime.getUTCHours() >= 1 && newDay){
+		console.log('refreshing balances')
 		newDay = false;
 		currency.forEach(user => {
 			if(user.balance < 10){
