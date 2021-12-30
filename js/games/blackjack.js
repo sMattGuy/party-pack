@@ -27,6 +27,7 @@ module.exports = {
 		
 		const guildID = interaction.guildId;
 		const user = await currency.get(challengerID);
+		const stats = await user.getStats();
 		await user.addGuild(guildID);
 		
 		console.log(challengerName + ' has started blackjack');	
@@ -64,7 +65,8 @@ module.exports = {
 				});
 			}
 			else{
-				let resultsOfGame = `You got a natural! You win!\nYou:${blackjackCards[playerCard1]},${blackjackCards[playerCard2]}. Dealer:${blackjackCards[dealerCard1]},${blackjackCards[dealerCard2]}.\n`;
+				const earnedXP = Math.floor(betAmount/2);
+				let resultsOfGame = `You got a natural! You win, and you got ${earnedXP}XP!\nYou:${blackjackCards[playerCard1]},${blackjackCards[playerCard2]}. Dealer:${blackjackCards[dealerCard1]},${blackjackCards[dealerCard2]}.\n`;
 				drawBoard(interaction, false, resultsOfGame, playerCards, dealerCards,false,true,21,challengerName,cardValue[dealerCards[0]%13]+cardValue[dealerCards[1]%13],challengerImage)
 				.catch(error => {
 					console.log(error);
@@ -72,6 +74,9 @@ module.exports = {
 				});
 				currency.addBalance(challengerID, betAmount);
 				currency.addWin(challengerID);
+				
+				//stat update
+				statUpdate(earnedXP);
 			}
 		}
 		else if(((dealerCard1%13 == 0)&&(dealerCard2%13 == 9 || dealerCard2%13 == 10 || dealerCard2%13 == 11 || dealerCard2%13 == 12)) || ((dealerCard2%13 == 0)&&(dealerCard1%13 == 9 || dealerCard1%13 == 10 || dealerCard1%13 == 11 || dealerCard1%13 == 12))){
@@ -81,6 +86,10 @@ module.exports = {
 				console.log(error);
 				interaction.editReply(resultsOfGame);
 			});
+			if(Math.random() < (stats.chr / 300)){
+				betAmount = Math.floor(betAmount/2);
+				interaction.followUp('You use your CHR and wink at the dealer, while hes flustered you sneak back half your bet!');
+			}
 			currency.subBalance(challengerID, betAmount);
 			currency.addLoss(challengerID);
 		}
@@ -98,27 +107,51 @@ module.exports = {
 			
 			const collector = interaction.channel.createMessageComponentCollector({filter,time: 60000});
 			
-			let resultsOfGame = `${challengerName}, Type 'hit' or 'stand', you have 1 min to respond.\nYou:${blackjackCards[playerCard1]},${blackjackCards[playerCard2]}. Dealer:${blackjackCards[dealerCard1]},??.`;
-			drawBoard(interaction, true, resultsOfGame, playerCards, dealerCards,false,false,playersValue,challengerName,cardValue[dealerCards[0]%13],challengerImage).then(() => {
-				let playing = false;
-				collector.once('collect',async buttInteraction => {
-					playing = true;
-					if(buttInteraction.customId == 'hit'){
-						await buttInteraction.update({components:[]});
-						blackjackHit(interaction);
-					}
-					else if(buttInteraction.customId == 'stand'){
-						await buttInteraction.update({components:[]});
-						blackjackStand(interaction);
-					}
+			//int check 
+			if(Math.random() < (stats.inte / 300)){
+				let resultsOfGame = `${challengerName} using your INT you count the cards, you know what the dealer has! Press 'hit' or 'stand', you have 1 min to respond.\nYou:${blackjackCards[playerCard1]},${blackjackCards[playerCard2]}. Dealer:${blackjackCards[dealerCard1]},Dealer:${blackjackCards[dealerCard2]}.`;
+				drawBoard(interaction, false, resultsOfGame, playerCards, dealerCards,false,false,playersValue,challengerName,cardValue[dealerCards[0]%13],challengerImage).then(() => {
+					let playing = false;
+					collector.once('collect',async buttInteraction => {
+						playing = true;
+						if(buttInteraction.customId == 'hit'){
+							await buttInteraction.update({components:[]});
+							blackjackHit(interaction);
+						}
+						else if(buttInteraction.customId == 'stand'){
+							await buttInteraction.update({components:[]});
+							blackjackStand(interaction);
+						}
+					});
+					collector.once('end',collection => {
+						if(!playing){
+							interaction.deleteReply().catch(e => {console.log('interaction doesnt exist')});
+						}
+					});
 				});
-				collector.once('end',collection => {
-					if(!playing){
-						interaction.deleteReply().catch(e => {console.log('interaction doesnt exist')});
-					}
+			}
+			else{
+				let resultsOfGame = `${challengerName}, Press 'hit' or 'stand', you have 1 min to respond.\nYou:${blackjackCards[playerCard1]},${blackjackCards[playerCard2]}. Dealer:${blackjackCards[dealerCard1]},??.`;
+				drawBoard(interaction, true, resultsOfGame, playerCards, dealerCards,false,false,playersValue,challengerName,cardValue[dealerCards[0]%13],challengerImage).then(() => {
+					let playing = false;
+					collector.once('collect',async buttInteraction => {
+						playing = true;
+						if(buttInteraction.customId == 'hit'){
+							await buttInteraction.update({components:[]});
+							blackjackHit(interaction);
+						}
+						else if(buttInteraction.customId == 'stand'){
+							await buttInteraction.update({components:[]});
+							blackjackStand(interaction);
+						}
+					});
+					collector.once('end',collection => {
+						if(!playing){
+							interaction.deleteReply().catch(e => {console.log('interaction doesnt exist')});
+						}
+					});
 				});
-			});
-			
+			}
 			async function blackjackHit(hitInteraction){
 				let pCardValue = [1,2,3,4,5,6,7,8,9,10,10,10,10];
 				let dealerValue = [11,2,3,4,5,6,7,8,9,10,10,10,10];
@@ -145,6 +178,10 @@ module.exports = {
 				if(currentTotal > 21){
 					let resultsOfGame = `Bust! You drew a ${blackjackCards[newCard]}, ${challengerName}, you lose!\nYou:${cardViewer}\n`;
 					drawBoard(hitInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,currentTotal,challengerName,dealerValue[dealerCards[0]%13]+dealerValue[dealerCards[1]%13],challengerImage);
+					if(Math.random() < (stats.chr / 300)){
+						betAmount = Math.floor(betAmount/2);
+						interaction.followUp('You use your CHR and wink at the dealer, while hes flustered you sneak back half your bet!');
+					}
 					currency.subBalance(challengerID, betAmount);
 					currency.addLoss(challengerID);
 				}
@@ -217,7 +254,8 @@ module.exports = {
 					playerViewer += blackjackCards[playerCards[i]];
 				}
 				if(dealerTotal > 21){
-					let resultsOfGame = `Bust! Dealer loses, ${challengerName}, you've won!\nYou:${playerViewer}. Dealer:${cardViewer}\n`;
+					const earnedXP = Math.floor(betAmount/2);
+					let resultsOfGame = `Bust! Dealer loses, ${challengerName}, you've won and got ${earnedXP}XP!\nYou:${playerViewer}. Dealer:${cardViewer}\n`;
 					
 					let playerValueBust = 0;
 					let playerAceBust = false;
@@ -234,6 +272,9 @@ module.exports = {
 					drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValueBust,challengerName,dealerTotal,challengerImage);
 					currency.addBalance(challengerID, betAmount);
 					currency.addWin(challengerID);
+					
+					//stat update
+					statUpdate(earnedXP);
 				}
 				else{
 					let playerValue = 0;
@@ -249,18 +290,26 @@ module.exports = {
 						playerValue += 10;
 					}
 					if(playerValue > dealerTotal){
+						const earnedXP = Math.floor(betAmount/2);
 						//player wins
-						let resultsOfGame = `${challengerName}, you have ${playerValue}, Dealer has ${dealerTotal}. You've won!\nYou:${playerViewer}. Dealer:${cardViewer}\n`;
+						let resultsOfGame = `${challengerName}, you have ${playerValue}, Dealer has ${dealerTotal}. You've won and you got ${earnedXP}XP!\nYou:${playerViewer}. Dealer:${cardViewer}\n`;
 						console.log(challengerName + ' won in blackjack');
 						drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage);
 						currency.addBalance(challengerID, betAmount);
 						currency.addWin(challengerID);
+						
+						//stat update
+						statUpdate(earnedXP);
 					}
 					else if(dealerTotal > playerValue){
 						//player lose
 						let resultsOfGame = `${challengerName}, you have ${playerValue}, Dealer has ${dealerTotal}. You've lost!\nYou:${playerViewer}. Dealer:${cardViewer}\n`;
 						console.log(challengerName + ' lost in blackjack');
 						drawBoard(standInteraction, false, resultsOfGame, playerCards, dealerCards,false,true,playerValue,challengerName,dealerTotal,challengerImage);
+						if(Math.random() < (stats.chr / 300)){
+							betAmount = Math.floor(betAmount/2);
+							interaction.followUp('You use your CHR and wink at the dealer, while hes flustered you sneak back half your bet!');
+						}
 						currency.subBalance(challengerID, betAmount);
 						currency.addLoss(challengerID);
 					}
@@ -272,7 +321,41 @@ module.exports = {
 					}
 				}
 			}
-			
+			async function statUpdate(earnedXP){
+				//stat update
+				let nextLevel = 25*Math.pow(stats.lvl, 2.6);
+				stats.exp += earnedXP;
+				let levelsEarned = 0;
+				while(stats.exp >= nextLevel){
+					levelsEarned += 1;
+					stats.lvl += 1;
+					stats.exp -= nextLevel;
+					nextLevel = 25*Math.pow(stats.lvl, 2.6);
+				}
+				if(levelsEarned){
+					for(let i=0;i<levelsEarned;i++){
+						stats.atk += Math.floor(Math.random()*2);
+						stats.def += Math.floor(Math.random()*2);
+						stats.chr += Math.floor(Math.random()*2)+1;
+						stats.spc += Math.floor(Math.random()*2);
+						stats.inte += Math.floor(Math.random()*2);
+					}
+					const statsEmbed = new MessageEmbed()
+					.setColor('#7700E6')
+					.setTitle(`${challengerName} Lvl ${stats.lvl}`)
+					.setThumbnail(challengerImage)
+					.addFields(
+						{ name: 'ATK', value: `${stats.atk}`, inline: true},
+						{ name: 'DEF', value: `${stats.def}`, inline: true},
+						{ name: 'CHR', value: `${stats.chr}`, inline: true},
+						{ name: 'SPC', value: `${stats.spc}`, inline: true},
+						{ name: 'INT', value: `${stats.inte}`, inline: true},
+						{ name: 'QT', value: `100%`, inline: true},
+					);
+					interaction.followUp({content:`You leveled up! You are now Lvl ${stats.lvl}!`,embeds:[statsEmbed]});
+				}
+				stats.save();
+			}
 		}
 	}
 }
@@ -304,10 +387,10 @@ async function drawBoard(interaction, hiddenDealer, gameMessage, playerCards, de
 	ctx.font = 'bold 20px sans-serif';
 	ctx.fillStyle = '#ffffff';
 	ctx.fillText(playerVal, 80, 160);
-	//carl name and val
+	//dealer name and val
 	ctx.font = 'bold 20px sans-serif';
 	ctx.fillStyle = '#ffffff';
-	ctx.fillText('Dealer', 320, 160);
+	ctx.fillText('Dealer', 350, 160);
 	ctx.font = 'bold 20px sans-serif';
 	ctx.fillStyle = '#ffffff';
 	ctx.fillText(dealerVal, 390, 135);

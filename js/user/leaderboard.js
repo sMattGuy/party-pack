@@ -15,10 +15,11 @@ module.exports = {
 		let position = 1;
 		for(let i=0;i<result.length;i++){
 			const user = await currency.get(result[i].dataValues.user_id);
+			const stats = await user.getStats();
 			const inGuild = await user.checkGuild(guildID);
 			if(inGuild){
 				const username = await interaction.guild.members.fetch(user.user_id).then(userf => {return userf.displayName});
-				leaderboardMsg += `(${position}) ${username}: ${user.balance}💰\n`;
+				leaderboardMsg += `(${position}) ${username}: ${user.balance}💰 Lvl: ${stats.lvl}\n`;
 				position++;
 			}
 			else{

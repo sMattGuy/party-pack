@@ -10,12 +10,17 @@ module.exports = {
 		let challengerID = interaction.user.id;
 		let challengerName = interaction.user.username;
 		let challenger = interaction.user;
+		
 		let optionOpp = await interaction.options.getUser('user');
 		let opponentID = optionOpp.id;
 		let opponentName = optionOpp.username;
+		
+		let challengerPic = interaction.user.displayAvatarURL({format:'png'});
+		let opponentPic = optionOpp.displayAvatarURL({format:'png'});
+		
 		let betAmount = interaction.options.getInteger('bet');
 		//check if trying to battle self
-		
+		let earnedXP = Math.floor(betAmount/2);
 		if(opponentID == challengerID){
 			await interaction.reply({content:'You try to verse yourself and lost... how sad',ephemeral: true});
 			return;
@@ -119,26 +124,49 @@ module.exports = {
 							if(challThrow != 'rock' && challThrow != 'scissors' && challThrow != 'paper' && oppThrow != 'rock' && oppThrow != 'scissors' && oppThrow != 'paper'){
 								await interaction.editReply(`Someone didn't choose correctly, the match is canceled!`);
 							}
-							else if(challThrow == 'rock' && oppThrow == 'scissors'){
-								await interaction.editReply(`${challengerName} threw rock, ${opponentName} threw scissors\n${challengerName} won!`);
+							else if((challThrow == 'rock' && oppThrow == 'scissors')||(challThrow == 'scissors' && oppThrow == 'paper')||(challThrow == 'paper' && oppThrow == 'rock')){
+								await interaction.editReply(`${challengerName} threw ${challThrow}, ${opponentName} threw ${oppThrow}\n${challengerName} won!`);
 								currency.addBalance(challengerID,betAmount);
 								currency.addWin(challengerID);
 								currency.subBalance(opponentID,betAmount);
 								currency.addLoss(opponentID);
-							}
-							else if(challThrow == 'scissors' && oppThrow == 'paper'){
-								await interaction.editReply(`${challengerName} threw scissors, ${opponentName} threw paper\n${challengerName} won!`);
-								currency.addBalance(challengerID,betAmount);
-								currency.addWin(challengerID);
-								currency.subBalance(opponentID,betAmount);
-								currency.addLoss(opponentID);
-							}
-							else if(challThrow == 'paper' && oppThrow == 'rock'){
-								await interaction.editReply(`${challengerName} threw paper, ${opponentName} threw rock\n${challengerName} won!`);
-								currency.addBalance(challengerID,betAmount);
-								currency.addWin(challengerID);
-								currency.subBalance(opponentID,betAmount);
-								currency.addLoss(opponentID);
+								
+								const winUser = await currency.get(challengerID);
+								const stats = await winUser.getStats();
+								
+								//stat update
+								let nextLevel = 25*Math.pow(stats.lvl, 2.6);
+								stats.exp += earnedXP;
+								let levelsEarned = 0;
+								while(stats.exp >= nextLevel){
+									levelsEarned += 1;
+									stats.lvl += 1;
+									stats.exp -= nextLevel;
+									nextLevel = 25*Math.pow(stats.lvl, 2.6);
+								}
+								if(levelsEarned){
+									for(let i=0;i<levelsEarned;i++){
+										stats.atk += Math.floor(Math.random()*2);
+										stats.def += Math.floor(Math.random()*2);
+										stats.chr += Math.floor(Math.random()*2)+1;
+										stats.spc += Math.floor(Math.random()*2);
+										stats.inte += Math.floor(Math.random()*2);
+									}
+									const statsEmbed = new MessageEmbed()
+									.setColor('#7700E6')
+									.setTitle(`${challengerName} Lvl ${stats.lvl}`)
+									.setThumbnail(challengerPic)
+									.addFields(
+										{ name: 'ATK', value: `${stats.atk}`, inline: true},
+										{ name: 'DEF', value: `${stats.def}`, inline: true},
+										{ name: 'CHR', value: `${stats.chr}`, inline: true},
+										{ name: 'SPC', value: `${stats.spc}`, inline: true},
+										{ name: 'INT', value: `${stats.inte}`, inline: true},
+										{ name: 'QT', value: `100%`, inline: true},
+									);
+									interaction.followUp({content:`You leveled up! You are now Lvl ${stats.lvl}!`,embeds:[statsEmbed]});
+								}
+								stats.save();
 							}
 							else if(challThrow == oppThrow){
 								await interaction.editReply(`${challengerName} threw ${challThrow}, ${opponentName} threw ${oppThrow}\nIt's a tie!`);
@@ -149,6 +177,42 @@ module.exports = {
 								currency.addWin(opponentID);
 								currency.subBalance(challengerID,betAmount);
 								currency.addLoss(challengerID);
+								
+								const winUser = await currency.get(opponentID);
+								const stats = await winUser.getStats();
+								//stat update
+								let nextLevel = 25*Math.pow(stats.lvl, 2.6);
+								stats.exp += earnedXP;
+								let levelsEarned = 0;
+								while(stats.exp >= nextLevel){
+									levelsEarned += 1;
+									stats.lvl += 1;
+									stats.exp -= nextLevel;
+									nextLevel = 25*Math.pow(stats.lvl, 2.6);
+								}
+								if(levelsEarned){
+									for(let i=0;i<levelsEarned;i++){
+										stats.atk += Math.floor(Math.random()*2);
+										stats.def += Math.floor(Math.random()*2);
+										stats.chr += Math.floor(Math.random()*2)+1;
+										stats.spc += Math.floor(Math.random()*2);
+										stats.inte += Math.floor(Math.random()*2);
+									}
+									const statsEmbed = new MessageEmbed()
+									.setColor('#7700E6')
+									.setTitle(`${opponentName} Lvl ${stats.lvl}`)
+									.setThumbnail(opponentPic)
+									.addFields(
+										{ name: 'ATK', value: `${stats.atk}`, inline: true},
+										{ name: 'DEF', value: `${stats.def}`, inline: true},
+										{ name: 'CHR', value: `${stats.chr}`, inline: true},
+										{ name: 'SPC', value: `${stats.spc}`, inline: true},
+										{ name: 'INT', value: `${stats.inte}`, inline: true},
+										{ name: 'QT', value: `100%`, inline: true},
+									);
+									interaction.followUp({content:`You leveled up! You are now Lvl ${stats.lvl}!`,embeds:[statsEmbed]});
+								}
+								stats.save();
 							}
 						});
 						opponentCollector.once('end',collected => {
