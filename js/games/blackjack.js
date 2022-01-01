@@ -321,41 +321,41 @@ module.exports = {
 					}
 				}
 			}
-			async function statUpdate(earnedXP){
-				//stat update
-				let nextLevel = 25*Math.pow(stats.lvl, 2.6);
-				stats.exp += earnedXP;
-				let levelsEarned = 0;
-				while(stats.exp >= nextLevel){
-					levelsEarned += 1;
-					stats.lvl += 1;
-					stats.exp -= nextLevel;
-					nextLevel = 25*Math.pow(stats.lvl, 2.6);
-				}
-				if(levelsEarned){
-					for(let i=0;i<levelsEarned;i++){
-						stats.atk += Math.floor(Math.random()*2);
-						stats.def += Math.floor(Math.random()*2);
-						stats.chr += Math.floor(Math.random()*2)+1;
-						stats.spc += Math.floor(Math.random()*2);
-						stats.inte += Math.floor(Math.random()*2);
-					}
-					const statsEmbed = new MessageEmbed()
-					.setColor('#7700E6')
-					.setTitle(`${challengerName} Lvl ${stats.lvl}`)
-					.setThumbnail(challengerImage)
-					.addFields(
-						{ name: 'ATK', value: `${stats.atk}`, inline: true},
-						{ name: 'DEF', value: `${stats.def}`, inline: true},
-						{ name: 'CHR', value: `${stats.chr}`, inline: true},
-						{ name: 'SPC', value: `${stats.spc}`, inline: true},
-						{ name: 'INT', value: `${stats.inte}`, inline: true},
-						{ name: 'QT', value: `100%`, inline: true},
-					);
-					interaction.followUp({content:`You leveled up! You are now Lvl ${stats.lvl}!`,embeds:[statsEmbed]});
-				}
-				stats.save();
+		}
+		async function statUpdate(earnedXP){
+			//stat update
+			let nextLevel = 25*Math.pow(stats.lvl, 2.6);
+			stats.exp += earnedXP;
+			let levelsEarned = 0;
+			while(stats.exp >= nextLevel){
+				levelsEarned += 1;
+				stats.lvl += 1;
+				stats.exp -= nextLevel;
+				nextLevel = 25*Math.pow(stats.lvl, 2.6);
 			}
+			if(levelsEarned){
+				for(let i=0;i<levelsEarned;i++){
+					stats.atk += Math.floor(Math.random()*2);
+					stats.def += Math.floor(Math.random()*2);
+					stats.chr += Math.floor(Math.random()*2)+1;
+					stats.spc += Math.floor(Math.random()*2);
+					stats.inte += Math.floor(Math.random()*2);
+				}
+				const statsEmbed = new MessageEmbed()
+				.setColor('#7700E6')
+				.setTitle(`${challengerName} Lvl ${stats.lvl}`)
+				.setThumbnail(challengerImage)
+				.addFields(
+					{ name: 'ATK', value: `${stats.atk}`, inline: true},
+					{ name: 'DEF', value: `${stats.def}`, inline: true},
+					{ name: 'CHR', value: `${stats.chr}`, inline: true},
+					{ name: 'SPC', value: `${stats.spc}`, inline: true},
+					{ name: 'INT', value: `${stats.inte}`, inline: true},
+					{ name: 'QT', value: `100%`, inline: true},
+				);
+				interaction.followUp({content:`You leveled up! You are now Lvl ${stats.lvl}!`,embeds:[statsEmbed]});
+			}
+			stats.save();
 		}
 	}
 }
