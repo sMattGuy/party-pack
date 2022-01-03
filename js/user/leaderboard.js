@@ -16,9 +16,14 @@ module.exports = {
 		for(let i=0;i<result.length;i++){
 			const user = await currency.get(result[i].dataValues.user_id);
 			const stats = await user.getStats();
-			const username = await interaction.guild.members.fetch(user.user_id).then(userf => {return userf.displayName});
-			leaderboardMsg += `(${position}) ${username}: ${user.balance}💰 Lvl: ${stats.lvl}\n`;
-			position++;
+			try{
+				const username = await interaction.guild.members.fetch(user.user_id).then(userf => {return userf.displayName});
+				leaderboardMsg += `(${position}) ${username}: ${user.balance}💰 Lvl: ${stats.lvl}\n`;
+				position++;
+			}
+			catch(error){
+				//user not in server
+			}
 		}
 		
 		return interaction.editReply({
